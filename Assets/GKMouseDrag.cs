@@ -5,7 +5,10 @@ using UnityEngine.InputSystem;
 public class GKMouseBoneDrag : MonoBehaviour
 {
     public Camera targetCamera;
-    public float sensitivity = 0.15f;
+
+    [Header("マウス操作")]
+    public float sensitivity = 0.001f;
+    public float maxRotationPerFrame = 1.5f;
 
     private GKBoneHandle selectedBone;
     private Vector2 previousMousePosition;
@@ -25,12 +28,14 @@ public class GKMouseBoneDrag : MonoBehaviour
             return;
         }
 
-        Vector2 mousePosition = Mouse.current.position.ReadValue();
+        Vector2 mousePosition =
+            Mouse.current.position.ReadValue();
 
-        // ボーンをクリックして選択
+        // ボーンをクリックしてつかむ
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            Ray ray = targetCamera.ScreenPointToRay(mousePosition);
+            Ray ray =
+                targetCamera.ScreenPointToRay(mousePosition);
 
             if (Physics.Raycast(
                 ray,
@@ -39,7 +44,8 @@ public class GKMouseBoneDrag : MonoBehaviour
                 Physics.DefaultRaycastLayers,
                 QueryTriggerInteraction.Collide))
             {
-                selectedBone = hit.collider.GetComponent<GKBoneHandle>();
+                selectedBone =
+                    hit.collider.GetComponent<GKBoneHandle>();
 
                 if (selectedBone != null)
                 {
@@ -48,40 +54,65 @@ public class GKMouseBoneDrag : MonoBehaviour
             }
         }
 
-        // ドラッグ中にボーンを回転
-        if (Mouse.current.leftButton.isPressed && selectedBone != null)
+        // マウスを動かして前腕を回転させる
+        if (Mouse.current.leftButton.isPressed &&
+            selectedBone != null)
         {
-            Vector2 delta = mousePosition - previousMousePosition;
+            Vector2 delta =
+                mousePosition - previousMousePosition;
 
             if (delta.sqrMagnitude > 0.01f)
             {
                 Transform bone = selectedBone.transform;
 
-                Vector3 boneDirection = bone.childCount > 0
-                    ? bone.GetChild(0).position - bone.position
-                    : bone.up;
+                Vector3 boneDirection;
 
-                if (boneDirection.sqrMagnitude > 0.0001f)
+                // 前腕の向きを取得
+                if (bone.childCount > 0)
                 {
-                    boneDirection.Normalize();
+                    boneDirection =
+                        bone.GetChild(0).position - bone.position;
+                }
+                else if (bone.parent != null)
+                {
+                    boneDirection =
+                        bone.position - bone.parent.position;
+                }
+                else
+                {
+                    previousMousePosition = mousePosition;
+                    return;
+                }
 
-                    // マウスの移動方向をカメラ基準で取得
-                    Vector3 dragDirection =
-                        targetCamera.transform.right * delta.x
-                        + targetCamera.transform.up * delta.y;
+                boneDirection.Normalize();
 
+                // マウスの移動方向をカメラ基準で計算
+                Vector3 dragDirection =
+                    targetCamera.transform.right * delta.x
+                    + targetCamera.transform.up * delta.y;
+
+                // 1回の移動で回転する角度を制限
+                float rotationAmount =
+                    Mathf.Min(
+                        dragDirection.magnitude * sensitivity,
+                        maxRotationPerFrame
+                    );
+
+                if (dragDirection.sqrMagnitude > 0.0001f)
+                {
                     Vector3 rotationAxis =
-                        Vector3.Cross(boneDirection, dragDirection);
+                        Vector3.Cross(
+                            boneDirection,
+                            dragDirection.normalized
+                        );
 
                     if (rotationAxis.sqrMagnitude > 0.0001f)
                     {
                         rotationAxis.Normalize();
 
-                        float angle = delta.magnitude * sensitivity;
-
                         bone.Rotate(
                             rotationAxis,
-                            angle,
+                            rotationAmount,
                             Space.World
                         );
                     }
@@ -91,7 +122,7 @@ public class GKMouseBoneDrag : MonoBehaviour
             previousMousePosition = mousePosition;
         }
 
-        // マウスを離したら選択解除
+        // マウスを離したら操作終了
         if (Mouse.current.leftButton.wasReleasedThisFrame)
         {
             selectedBone = null;
