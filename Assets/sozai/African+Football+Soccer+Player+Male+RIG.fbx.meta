@@ -3,7 +3,222 @@ guid: eed95865760703240b7526acd27f1db2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Arms
+    second: {fileID: 2100000, guid: ffb1b278131efc540a22ba0f5a0f27c2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Arms.1
+    second: {fileID: 2100000, guid: e0be1b9a4f19af74a879d039bad09020, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: EyeMoisture
+    second: {fileID: 2100000, guid: 51a6411589420404ab9788c8f8f54969, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: EyeSocket
+    second: {fileID: 2100000, guid: c124c94a313f9ea4c81afc68d6c5657b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eyelashes
+    second: {fileID: 2100000, guid: ab1fe17d9e016984bb6f6a62a4214813, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Face
+    second: {fileID: 2100000, guid: f5c35a580cb35774bb186f4db3d78c4c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Face.1
+    second: {fileID: 2100000, guid: a6e780289ae288b4eb5be967fd64d63a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Face.2
+    second: {fileID: 2100000, guid: 7967a7e83971bf94e9feccd78bc70dc7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Legs
+    second: {fileID: 2100000, guid: 6579a6370d4e969438baec23bb244816, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Legs.1
+    second: {fileID: 2100000, guid: f7511644704a362438353f72d6b0d30d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Pupils
+    second: {fileID: 2100000, guid: 1220288cde4f6714bb7f0270d50b1e82, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Pupils.1
+    second: {fileID: 2100000, guid: c884e8fa8fbc37c45b5bd5d31465f8eb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES
+    second: {fileID: 2100000, guid: 54415603aaee84f43a384344b4d7305a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.1
+    second: {fileID: 2100000, guid: f53ff1d5c5949334381176aef9242945, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.10
+    second: {fileID: 2100000, guid: 2b9824170f9f3fb44a4595fdc7227a1f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.2
+    second: {fileID: 2100000, guid: 649613dbaefd89a4197815d2dfd96e2c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.3
+    second: {fileID: 2100000, guid: 867b91dbea200fc40bf900e853e33d71, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.4
+    second: {fileID: 2100000, guid: 3062ee7745d916147b313feb7b9e4d54, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.5
+    second: {fileID: 2100000, guid: d3dc32b1f589666409be73250d265f25, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.6
+    second: {fileID: 2100000, guid: 63277a2bb98dded448a341a969df3e20, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.7
+    second: {fileID: 2100000, guid: 29c43df0e84daba4b84699e2ee501a84, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.8
+    second: {fileID: 2100000, guid: 5a917fe800f93254fa919ad9f9b04a2a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHOES.9
+    second: {fileID: 2100000, guid: 43e280c13e1a41848888687cc0f6e77c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHORTS
+    second: {fileID: 2100000, guid: 00b117e3030fed24b84d6e575f6147a0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHORTS.1
+    second: {fileID: 2100000, guid: 60b72e7297cbdc94abaf6975fdea511a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHORTS.2
+    second: {fileID: 2100000, guid: 89f6c9ecd372c164a928a4d1cecc9923, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SHORTS.3
+    second: {fileID: 2100000, guid: fb3a323384e3f754287cfe0985fe0306, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SOCKS
+    second: {fileID: 2100000, guid: 5ff530bd80b96624caf210b0560fee2f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sclera
+    second: {fileID: 2100000, guid: a59a2f18922ced94fae59c69fe88323d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: T-Shirt
+    second: {fileID: 2100000, guid: 4cbcd4bbd6367ee48b7db1c32a7b000e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Teeth
+    second: {fileID: 2100000, guid: 802c42d6379ec2c418258b180c2be27b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Teeth.1
+    second: {fileID: 2100000, guid: 985d0933e1b2592448fb5bbd261c01be, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Torso
+    second: {fileID: 2100000, guid: 400b0b27c8d5d2a44b2897f88a59883f, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ARMS
+    second: {fileID: 2800000, guid: b7676d21b170a6c4cb22181a8453604a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: EYES
+    second: {fileID: 2800000, guid: eb7ce831e6c04a046bf630154a03560f, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: FACE
+    second: {fileID: 2800000, guid: 045beb62422aa1b4e8f2366075a3e954, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LEGS
+    second: {fileID: 2800000, guid: 598f81ddbe383584bb0e5f95454089d7, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: MOUTH
+    second: {fileID: 2800000, guid: 32b0c8105f9a60b468a7ef57cd261206, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: SHIRT
+    second: {fileID: 2800000, guid: 988fda68c1d4a8e41bbf42c369e51f62, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: SHOES DIFFUSE
+    second: {fileID: 2800000, guid: d1f9cada2a477f14cba2d55c97c29607, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: SHORTS DIFFUSE
+    second: {fileID: 2800000, guid: 4372e411c5289664c84110cbc4ce30df, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: SOCKS
+    second: {fileID: 2800000, guid: b26f5c506fa1cdc4a812de8ed5dc3e40, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: TORSO
+    second: {fileID: 2800000, guid: 052f66cffe4642f4e8686e1447f7b919, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
