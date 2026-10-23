@@ -212,7 +212,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 4cbcd4bbd6367ee48b7db1c32a7b000e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -290,7 +290,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BallShooter
   ballRigidbody: {fileID: 121008901}
   aimPoint: {fileID: 1954432021}
-  shootSpeed: 8
+  shootSpeed: 20
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
