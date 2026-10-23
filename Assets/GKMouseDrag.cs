@@ -75,6 +75,27 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         CreateRotationRings();
         CreateMoveArrows();
+
+        // 起動時から移動矢印を表示するため、MoveSidewaysの部位を自動で探す
+        GKBoneHandle[] handles =
+            FindObjectsByType<GKBoneHandle>(FindObjectsSortMode.None);
+
+        foreach (GKBoneHandle handle in handles)
+        {
+            if (handle.handleType == GKBoneHandle.HandleType.MoveSideways)
+            {
+                moveGizmoHandle = handle;
+                moveGizmoVisible = true;
+                SetMoveArrowRenderers(true);
+                UpdateMoveArrowPositions();
+                break;
+            }
+        }
+
+        if (moveGizmoHandle == null)
+        {
+            Debug.LogWarning("GK移動矢印：MoveSidewaysに設定されたGKBoneHandleが見つかりません。hipのHandle Typeを確認してください。");
+        }
     }
 
     void Update()
@@ -430,8 +451,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         if (selectedRing != null)
         {
-            moveGizmoVisible = false;
-            SetMoveArrowRenderers(false);
+            // 関節を選んでも、移動矢印は表示したままにする
             BeginRingDrag(mousePosition);
             return;
         }
