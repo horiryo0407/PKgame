@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
@@ -16,6 +15,26 @@ public class GKMouseBoneDrag : MonoBehaviour
     [Header("回転設定")]
     [Range(0.1f, 2f)]
     public float rotationSensitivity = 1f;
+
+    [Header("基本の関節回転制限（度）")]
+    public float shoulderLimit = 85f;
+    public float bendLimit = 120f;
+    public float bendSideLimit = 20f;
+    public float thighLimit = 90f;
+    public float thighSideLimit = 45f;
+
+    [Header("個別にきつく制限する軸（度）")]
+    [Tooltip("肩の青リング（横軸）の制限")]
+    [Range(5f, 90f)]
+    public float shoulderBlueLimit = 35f;
+
+    [Tooltip("太もも・股関節の赤リング（縦軸）の制限")]
+    [Range(5f, 90f)]
+    public float hipRedLimit = 45f;
+
+    [Tooltip("すね・膝関節の赤リング（縦軸）の制限")]
+    [Range(5f, 135f)]
+    public float kneeRedLimit = 70f;
 
     [Header("胴体の左右移動")]
     public Transform playerRoot;
@@ -35,7 +54,9 @@ public class GKMouseBoneDrag : MonoBehaviour
         public Color color;
     }
 
-    private readonly List<MoveArrow> moveArrows = new List<MoveArrow>();
+    private readonly List<MoveArrow> moveArrows =
+        new List<MoveArrow>();
+
     private bool moveGizmoVisible;
     private Vector3 selectedMoveAxis;
     private Vector3 selectedMoveScreenAxis;
@@ -47,6 +68,10 @@ public class GKMouseBoneDrag : MonoBehaviour
         public Transform bone;
         public LineRenderer line;
         public Vector3 localAxis;
+
+        public float currentAngle;
+        public float minAngle;
+        public float maxAngle;
     }
 
     private readonly List<RotationRing> rings =
@@ -62,7 +87,6 @@ public class GKMouseBoneDrag : MonoBehaviour
     private Plane rotationPlane;
     private bool useWorldPlane;
 
-    // ドラッグ開始時のリングの画面上の形を保存する
     private Vector2[] dragRingScreenPoints;
     private float previousRingAngle;
 
@@ -76,16 +100,19 @@ public class GKMouseBoneDrag : MonoBehaviour
         CreateRotationRings();
         CreateMoveArrows();
 
-        // 起動時から移動矢印を表示するため、MoveSidewaysの部位を自動で探す
+        // 起動時から移動矢印を表示
         GKBoneHandle[] handles =
-            FindObjectsByType<GKBoneHandle>(FindObjectsSortMode.None);
+            FindObjectsByType<GKBoneHandle>(
+                FindObjectsSortMode.None);
 
         foreach (GKBoneHandle handle in handles)
         {
-            if (handle.handleType == GKBoneHandle.HandleType.MoveSideways)
+            if (handle.handleType ==
+                GKBoneHandle.HandleType.MoveSideways)
             {
                 moveGizmoHandle = handle;
                 moveGizmoVisible = true;
+
                 SetMoveArrowRenderers(true);
                 UpdateMoveArrowPositions();
                 break;
@@ -94,7 +121,8 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         if (moveGizmoHandle == null)
         {
-            Debug.LogWarning("GK移動矢印：MoveSidewaysに設定されたGKBoneHandleが見つかりません。hipのHandle Typeを確認してください。");
+            Debug.LogWarning(
+                "GK移動矢印：MoveSidewaysに設定されたGKBoneHandleが見つかりません。hipのHandle Typeを確認してください。");
         }
     }
 
@@ -137,37 +165,67 @@ public class GKMouseBoneDrag : MonoBehaviour
     }
 
     // ------------------------------
-    // 移動矢印を作成・表示
+    // 移動矢印を作成
     // ------------------------------
 
     void CreateMoveArrows()
     {
         moveArrows.Clear();
-        moveArrows.Add(CreateMoveArrow("MoveArrow_Horizontal", Vector3.right, Color.red));
-        moveArrows.Add(CreateMoveArrow("MoveArrow_Vertical", Vector3.up, Color.green));
+
+        moveArrows.Add(
+            CreateMoveArrow(
+                "MoveArrow_Horizontal",
+                Vector3.right,
+                Color.red));
+
+        moveArrows.Add(
+            CreateMoveArrow(
+                "MoveArrow_Vertical",
+                Vector3.up,
+                Color.green));
+
         SetMoveArrowRenderers(false);
     }
 
-    MoveArrow CreateMoveArrow(string objectName, Vector3 screenAxis, Color color)
+    MoveArrow CreateMoveArrow(
+        string objectName,
+        Vector3 screenAxis,
+        Color color)
     {
-        GameObject arrowObject = new GameObject(objectName);
+        GameObject arrowObject =
+            new GameObject(objectName);
+
         arrowObject.transform.SetParent(transform, false);
 
         MoveArrow arrow = new MoveArrow();
+
         arrow.screenAxis = screenAxis;
         arrow.color = color;
-        arrow.shaft = CreateArrowLine(arrowObject.transform, "Shaft", color);
-        arrow.headLeft = CreateArrowLine(arrowObject.transform, "HeadLeft", color);
-        arrow.headRight = CreateArrowLine(arrowObject.transform, "HeadRight", color);
+
+        arrow.shaft = CreateArrowLine(
+            arrowObject.transform, "Shaft", color);
+
+        arrow.headLeft = CreateArrowLine(
+            arrowObject.transform, "HeadLeft", color);
+
+        arrow.headRight = CreateArrowLine(
+            arrowObject.transform, "HeadRight", color);
+
         return arrow;
     }
 
-    LineRenderer CreateArrowLine(Transform parent, string objectName, Color color)
+    LineRenderer CreateArrowLine(
+        Transform parent,
+        string objectName,
+        Color color)
     {
         GameObject lineObject = new GameObject(objectName);
+
         lineObject.transform.SetParent(parent, false);
 
-        LineRenderer line = lineObject.AddComponent<LineRenderer>();
+        LineRenderer line =
+            lineObject.AddComponent<LineRenderer>();
+
         line.useWorldSpace = true;
         line.positionCount = 2;
         line.startWidth = moveArrowWidth;
@@ -176,14 +234,15 @@ public class GKMouseBoneDrag : MonoBehaviour
         line.endColor = color;
         line.numCapVertices = 4;
         line.alignment = LineAlignment.View;
-        line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        line.shadowCastingMode =
+            UnityEngine.Rendering.ShadowCastingMode.Off;
         line.receiveShadows = false;
 
         Shader shader = Shader.Find("Sprites/Default");
+
         if (shader != null)
         {
             line.material = new Material(shader);
-            // できるだけ前面に描画する
             line.material.renderQueue = 5000;
         }
 
@@ -194,53 +253,81 @@ public class GKMouseBoneDrag : MonoBehaviour
     {
         foreach (MoveArrow arrow in moveArrows)
         {
-            if (arrow.shaft != null) arrow.shaft.enabled = visible;
-            if (arrow.headLeft != null) arrow.headLeft.enabled = visible;
-            if (arrow.headRight != null) arrow.headRight.enabled = visible;
+            if (arrow.shaft != null)
+                arrow.shaft.enabled = visible;
+
+            if (arrow.headLeft != null)
+                arrow.headLeft.enabled = visible;
+
+            if (arrow.headRight != null)
+                arrow.headRight.enabled = visible;
         }
     }
 
     void UpdateMoveArrowPositions()
     {
-        if (!moveGizmoVisible || moveGizmoHandle == null || targetCamera == null)
+        if (!moveGizmoVisible ||
+            moveGizmoHandle == null ||
+            targetCamera == null)
+        {
             return;
+        }
 
-        // hipは胴体の内側にあることが多いため、
-        // カメラ側へ大きめにずらして矢印が体に隠れないようにする
-        Vector3 anchor = moveGizmoHandle.transform.position
+        Vector3 anchor =
+            moveGizmoHandle.transform.position
             - targetCamera.transform.forward * 0.5f;
 
         foreach (MoveArrow arrow in moveArrows)
         {
-            Vector3 axis = arrow.screenAxis == Vector3.right
+            Vector3 axis =
+                arrow.screenAxis == Vector3.right
                 ? targetCamera.transform.right
                 : targetCamera.transform.up;
 
-            Vector3 end = anchor + axis * moveArrowLength;
-            Vector3 side = Vector3.Cross(targetCamera.transform.forward, axis).normalized
+            Vector3 end =
+                anchor + axis * moveArrowLength;
+
+            Vector3 side =
+                Vector3.Cross(
+                    targetCamera.transform.forward,
+                    axis).normalized
                 * moveArrowLength * 0.12f;
 
             arrow.shaft.SetPosition(0, anchor);
             arrow.shaft.SetPosition(1, end);
 
             arrow.headLeft.SetPosition(0, end);
-            arrow.headLeft.SetPosition(1, end - axis * moveArrowLength * 0.18f + side);
+            arrow.headLeft.SetPosition(
+                1,
+                end - axis * moveArrowLength * 0.18f + side);
 
             arrow.headRight.SetPosition(0, end);
-            arrow.headRight.SetPosition(1, end - axis * moveArrowLength * 0.18f - side);
+            arrow.headRight.SetPosition(
+                1,
+                end - axis * moveArrowLength * 0.18f - side);
         }
     }
 
-    float GetMoveArrowScreenDistance(MoveArrow arrow, Vector2 mousePosition)
+    float GetMoveArrowScreenDistance(
+        MoveArrow arrow,
+        Vector2 mousePosition)
     {
-        if (arrow.shaft == null || !arrow.shaft.enabled)
+        if (arrow.shaft == null ||
+            !arrow.shaft.enabled)
+        {
             return float.MaxValue;
+        }
 
-        Vector3 a3 = targetCamera.WorldToScreenPoint(arrow.shaft.GetPosition(0));
-        Vector3 b3 = targetCamera.WorldToScreenPoint(arrow.shaft.GetPosition(1));
+        Vector3 a3 = targetCamera.WorldToScreenPoint(
+            arrow.shaft.GetPosition(0));
+
+        Vector3 b3 = targetCamera.WorldToScreenPoint(
+            arrow.shaft.GetPosition(1));
 
         if (a3.z <= 0f || b3.z <= 0f)
+        {
             return float.MaxValue;
+        }
 
         return DistanceToSegment(
             mousePosition,
@@ -258,8 +345,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         GKBoneHandle[] handles =
             FindObjectsByType<GKBoneHandle>(
-                FindObjectsSortMode.None
-            );
+                FindObjectsSortMode.None);
 
         foreach (GKBoneHandle handle in handles)
         {
@@ -273,15 +359,13 @@ public class GKMouseBoneDrag : MonoBehaviour
                 handle.transform,
                 Vector3.right,
                 Color.red,
-                "Ring_X"
-            );
+                "Ring_X");
 
             CreateRing(
                 handle.transform,
                 Vector3.forward,
                 Color.blue,
-                "Ring_Z"
-            );
+                "Ring_Z");
         }
     }
 
@@ -329,28 +413,87 @@ public class GKMouseBoneDrag : MonoBehaviour
 
             if (axis == Vector3.right)
             {
-                // 赤リング：X軸を中心に回転
                 point = new Vector3(0f, y, x);
             }
             else
             {
-                // 青リング：Z軸を中心に回転
                 point = new Vector3(x, y, 0f);
             }
 
             line.SetPosition(i, point);
         }
 
+        float limit = GetJointLimit(bone.name, axis);
+
         rings.Add(new RotationRing
         {
             bone = bone,
             line = line,
-            localAxis = axis
+            localAxis = axis,
+            currentAngle = 0f,
+            minAngle = -limit,
+            maxAngle = limit
         });
     }
 
     // ------------------------------
-    // リング・hipの選択
+    // 部位ごとの回転制限
+    // ------------------------------
+
+    float GetJointLimit(string boneName, Vector3 axis)
+    {
+        string name = boneName.ToLowerInvariant();
+
+        bool isRedRing = axis == Vector3.right;
+        bool isBlueRing = axis == Vector3.forward;
+
+        // 肩：青リングを厳しく制限
+        if (name.Contains("shldr") ||
+            name.Contains("shoulder") ||
+            name.Contains("upperarm") ||
+            name.Contains("upper_arm"))
+        {
+            if (isBlueRing)
+                return shoulderBlueLimit;
+
+            return shoulderLimit;
+        }
+
+        // 肘・前腕
+        if (name.Contains("forearm") ||
+            name.Contains("elbow"))
+        {
+            return isRedRing
+                ? bendLimit
+                : bendSideLimit;
+        }
+
+        // すね・膝：赤リングを厳しく制限
+        if (name.Contains("shin") ||
+            name.Contains("calf") ||
+            name.Contains("knee"))
+        {
+            if (isRedRing)
+                return kneeRedLimit;
+
+            return bendSideLimit;
+        }
+
+        // 太もも・股関節：赤リングを厳しく制限
+        if (name.Contains("thigh") ||
+            name.Contains("upleg"))
+        {
+            if (isRedRing)
+                return hipRedLimit;
+
+            return thighSideLimit;
+        }
+
+        return shoulderLimit;
+    }
+
+    // ------------------------------
+    // リング・移動ハンドルの選択
     // ------------------------------
 
     void TrySelect(Vector2 mousePosition)
@@ -359,15 +502,20 @@ public class GKMouseBoneDrag : MonoBehaviour
         selectedMoveHandle = null;
         draggingMoveArrow = false;
 
-        // まず、表示中の移動矢印をクリックしたか確認する
+        // 移動矢印をクリックしたか確認
         if (moveGizmoVisible)
         {
-            float nearestArrowDistance = moveArrowClickDistance;
+            float nearestArrowDistance =
+                moveArrowClickDistance;
+
             MoveArrow nearestArrow = null;
 
             foreach (MoveArrow arrow in moveArrows)
             {
-                float distance = GetMoveArrowScreenDistance(arrow, mousePosition);
+                float distance =
+                    GetMoveArrowScreenDistance(
+                        arrow, mousePosition);
+
                 if (distance < nearestArrowDistance)
                 {
                     nearestArrowDistance = distance;
@@ -377,18 +525,21 @@ public class GKMouseBoneDrag : MonoBehaviour
 
             if (nearestArrow != null)
             {
-                selectedMoveScreenAxis = nearestArrow.screenAxis;
-                selectedMoveAxis = nearestArrow.screenAxis == Vector3.right
+                selectedMoveScreenAxis =
+                    nearestArrow.screenAxis;
+
+                selectedMoveAxis =
+                    nearestArrow.screenAxis == Vector3.right
                     ? targetCamera.transform.right
                     : targetCamera.transform.up;
+
                 draggingMoveArrow = true;
                 previousMousePosition = mousePosition;
                 return;
             }
         }
 
-        // 先にhipなどの移動ハンドルを探す。
-        // 胴体をクリックしたとき、近くの回転リングに判定を取られないようにする。
+        // 先にhipなどの移動ハンドルを探す
         Ray ray =
             targetCamera.ScreenPointToRay(mousePosition);
 
@@ -396,13 +547,11 @@ public class GKMouseBoneDrag : MonoBehaviour
             ray,
             100f,
             Physics.DefaultRaycastLayers,
-            QueryTriggerInteraction.Collide
-        );
+            QueryTriggerInteraction.Collide);
 
         System.Array.Sort(
             hits,
-            (a, b) => a.distance.CompareTo(b.distance)
-        );
+            (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (RaycastHit hit in hits)
         {
@@ -419,17 +568,20 @@ public class GKMouseBoneDrag : MonoBehaviour
                 handle.handleType ==
                 GKBoneHandle.HandleType.MoveSideways)
             {
-                // 胴体をクリックしたら矢印を表示する。ここではまだ移動しない
                 moveGizmoHandle = handle;
                 moveGizmoVisible = true;
+
                 SetMoveArrowRenderers(true);
                 UpdateMoveArrowPositions();
-                Debug.Log("GK移動矢印を表示しました: " + handle.name);
+
+                Debug.Log(
+                    "GK移動矢印を表示しました: " + handle.name);
+
                 return;
             }
         }
 
-        // hipをクリックしていない場合は、回転リングを探す
+        // 回転リングを探す
         float nearestDistance = clickDistance;
 
         foreach (RotationRing ring in rings)
@@ -451,38 +603,29 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         if (selectedRing != null)
         {
-            // 関節を選んでも、移動矢印は表示したままにする
             BeginRingDrag(mousePosition);
-            return;
         }
     }
 
     // ------------------------------
-    // ドラッグ開始時の準備
+    // ドラッグ開始
     // ------------------------------
 
     void BeginRingDrag(Vector2 mousePosition)
     {
         selectedWorldAxis =
             selectedRing.bone.TransformDirection(
-                selectedRing.localAxis
-            ).normalized;
+                selectedRing.localAxis).normalized;
 
         rotationPlane = new Plane(
             selectedWorldAxis,
-            selectedRing.bone.position
-        );
+            selectedRing.bone.position);
 
-        // カメラ方向と回転軸の角度を調べる
         float axisViewDot = Mathf.Abs(
             Vector3.Dot(
                 targetCamera.transform.forward,
-                selectedWorldAxis
-            )
-        );
+                selectedWorldAxis));
 
-        // 正面からリングを見ている場合は
-        // 3D平面上で角度を計算する
         useWorldPlane = axisViewDot >= 0.15f;
 
         Ray ray =
@@ -493,8 +636,8 @@ public class GKMouseBoneDrag : MonoBehaviour
             if (rotationPlane.Raycast(ray, out float enter))
             {
                 previousWorldVector =
-                    ray.GetPoint(enter) -
-                    selectedRing.bone.position;
+                    ray.GetPoint(enter)
+                    - selectedRing.bone.position;
 
                 if (previousWorldVector.sqrMagnitude < 0.0001f)
                 {
@@ -507,13 +650,13 @@ public class GKMouseBoneDrag : MonoBehaviour
             }
         }
 
-        // リングがカメラから見て横向きに近い場合は
-        // 画面上のリング形状を基準にする
         if (!useWorldPlane)
         {
             SaveRingScreenPoints();
+
             previousRingAngle =
-                FindClosestRingAngle(mousePosition, 0f, false);
+                FindClosestRingAngle(
+                    mousePosition, 0f, false);
         }
 
         previousMousePosition = mousePosition;
@@ -529,8 +672,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         {
             Vector3 world =
                 selectedRing.line.transform.TransformPoint(
-                    selectedRing.line.GetPosition(i)
-                );
+                    selectedRing.line.GetPosition(i));
 
             Vector3 screen =
                 targetCamera.WorldToScreenPoint(world);
@@ -556,7 +698,6 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         if (useWorldPlane)
         {
-            // カメラからマウス位置へレイを飛ばす
             Ray ray =
                 targetCamera.ScreenPointToRay(mousePosition);
 
@@ -566,8 +707,8 @@ public class GKMouseBoneDrag : MonoBehaviour
             }
 
             Vector3 currentWorldVector =
-                ray.GetPoint(enter) -
-                selectedRing.bone.position;
+                ray.GetPoint(enter)
+                - selectedRing.bone.position;
 
             if (currentWorldVector.sqrMagnitude < 0.0001f ||
                 previousWorldVector.sqrMagnitude < 0.0001f)
@@ -576,33 +717,25 @@ public class GKMouseBoneDrag : MonoBehaviour
                 return;
             }
 
-            // 3D空間でマウスの角度変化を計算
             angle = Vector3.SignedAngle(
                 previousWorldVector,
                 currentWorldVector,
-                selectedWorldAxis
-            );
+                selectedWorldAxis);
 
             previousWorldVector = currentWorldVector;
         }
         else
         {
-            // リングが画面上で細い線に見える場合は、
-            // リング上のどの位置をマウスが移動したかを調べる
             float currentRingAngle =
                 FindClosestRingAngle(
                     mousePosition,
                     previousRingAngle,
-                    true
-                );
+                    true);
 
             angle = Mathf.DeltaAngle(
                 previousRingAngle,
-                currentRingAngle
-            );
+                currentRingAngle);
 
-            // 赤リングの点の並びはX軸の正方向に対して
-            // 逆向きになるため補正する
             if (selectedRing.localAxis == Vector3.right)
             {
                 angle = -angle;
@@ -613,20 +746,29 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         angle *= rotationSensitivity;
 
-        if (Mathf.Abs(angle) > 0.0001f)
+        float targetAngle = Mathf.Clamp(
+            selectedRing.currentAngle + angle,
+            selectedRing.minAngle,
+            selectedRing.maxAngle);
+
+        float allowedAngle =
+            targetAngle - selectedRing.currentAngle;
+
+        if (Mathf.Abs(allowedAngle) > 0.0001f)
         {
             selectedRing.bone.Rotate(
                 selectedWorldAxis,
-                angle,
-                Space.World
-            );
+                allowedAngle,
+                Space.World);
+
+            selectedRing.currentAngle = targetAngle;
         }
 
         previousMousePosition = mousePosition;
     }
 
     // ------------------------------
-    // 画面上のリング位置から角度を求める
+    // リング上の角度を計算
     // ------------------------------
 
     float FindClosestRingAngle(
@@ -643,7 +785,8 @@ public class GKMouseBoneDrag : MonoBehaviour
         float bestScore = float.MaxValue;
         float bestAngle = referenceAngle;
 
-        int segmentCount = dragRingScreenPoints.Length - 1;
+        int segmentCount =
+            dragRingScreenPoints.Length - 1;
 
         for (int i = 0; i < segmentCount; i++)
         {
@@ -651,15 +794,14 @@ public class GKMouseBoneDrag : MonoBehaviour
             Vector2 b = dragRingScreenPoints[i + 1];
 
             Vector2 segment = b - a;
-
             float t = 0f;
 
             if (segment.sqrMagnitude > 0.001f)
             {
                 t = Mathf.Clamp01(
-                    Vector2.Dot(mousePosition - a, segment) /
-                    segment.sqrMagnitude
-                );
+                    Vector2.Dot(
+                        mousePosition - a,
+                        segment) / segment.sqrMagnitude);
             }
 
             Vector2 closest = a + segment * t;
@@ -671,8 +813,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
             float candidateAngle = Mathf.Repeat(
                 parameter / segmentCount * 360f,
-                360f
-            );
+                360f);
 
             float score = distance;
 
@@ -681,11 +822,8 @@ public class GKMouseBoneDrag : MonoBehaviour
                 float angleDifference = Mathf.Abs(
                     Mathf.DeltaAngle(
                         referenceAngle,
-                        candidateAngle
-                    )
-                );
+                        candidateAngle));
 
-                // 重なったリング部分で角度が急に飛ぶのを抑える
                 score += angleDifference * 0.05f;
             }
 
@@ -715,13 +853,11 @@ public class GKMouseBoneDrag : MonoBehaviour
         {
             Vector3 worldA =
                 ring.line.transform.TransformPoint(
-                    ring.line.GetPosition(i)
-                );
+                    ring.line.GetPosition(i));
 
             Vector3 worldB =
                 ring.line.transform.TransformPoint(
-                    ring.line.GetPosition(i + 1)
-                );
+                    ring.line.GetPosition(i + 1));
 
             Vector3 screenA =
                 targetCamera.WorldToScreenPoint(worldA);
@@ -737,8 +873,7 @@ public class GKMouseBoneDrag : MonoBehaviour
             float distance = DistanceToSegment(
                 mousePosition,
                 new Vector2(screenA.x, screenA.y),
-                new Vector2(screenB.x, screenB.y)
-            );
+                new Vector2(screenB.x, screenB.y));
 
             if (distance < nearest)
             {
@@ -762,18 +897,17 @@ public class GKMouseBoneDrag : MonoBehaviour
         }
 
         float t = Mathf.Clamp01(
-            Vector2.Dot(point - a, segment) /
-            segment.sqrMagnitude
-        );
+            Vector2.Dot(
+                point - a,
+                segment) / segment.sqrMagnitude);
 
         return Vector2.Distance(
             point,
-            a + segment * t
-        );
+            a + segment * t);
     }
 
     // ------------------------------
-    // hipによる胴体の左右移動
+    // hipによる胴体の移動
     // ------------------------------
 
     void MoveBody(Vector2 mousePosition)
@@ -783,15 +917,22 @@ public class GKMouseBoneDrag : MonoBehaviour
             return;
         }
 
-        Vector2 mouseDelta = mousePosition - previousMousePosition;
-        Vector2 screenAxis = selectedMoveScreenAxis == Vector3.right
+        Vector2 mouseDelta =
+            mousePosition - previousMousePosition;
+
+        Vector2 screenAxis =
+            selectedMoveScreenAxis == Vector3.right
             ? Vector2.right
             : Vector2.up;
 
-        float amount = Vector2.Dot(mouseDelta, screenAxis) * moveSensitivity;
+        float amount =
+            Vector2.Dot(mouseDelta, screenAxis)
+            * moveSensitivity;
+
         playerRoot.position += selectedMoveAxis * amount;
 
         previousMousePosition = mousePosition;
+
         UpdateMoveArrowPositions();
     }
 }
