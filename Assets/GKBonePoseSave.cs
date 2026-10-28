@@ -23,9 +23,7 @@ public class GKBonePoseSave : MonoBehaviour
     void Start()
     {
         if (loadPoseOnStart)
-        {
             LoadPose();
-        }
     }
 
     void Update()
@@ -39,6 +37,21 @@ public class GKBonePoseSave : MonoBehaviour
 
     public void SavePose()
     {
+        // GK本体のワールド位置
+        Vector3 pos = transform.position;
+        PlayerPrefs.SetFloat(Prefix + "RootPos_x", pos.x);
+        PlayerPrefs.SetFloat(Prefix + "RootPos_y", pos.y);
+        PlayerPrefs.SetFloat(Prefix + "RootPos_z", pos.z);
+
+        // hipのローカル位置
+        if (hip != null)
+        {
+            Vector3 hipPos = hip.localPosition;
+            PlayerPrefs.SetFloat(Prefix + "HipPos_x", hipPos.x);
+            PlayerPrefs.SetFloat(Prefix + "HipPos_y", hipPos.y);
+            PlayerPrefs.SetFloat(Prefix + "HipPos_z", hipPos.z);
+        }
+
         SaveBone("hip", hip);
         SaveBone("rShldrBend", rShldrBend);
         SaveBone("lShldrBend", lShldrBend);
@@ -50,12 +63,30 @@ public class GKBonePoseSave : MonoBehaviour
         SaveBone("rShin", rShin);
 
         PlayerPrefs.Save();
-
-        Debug.Log("GKのポーズを保存しました！");
+        Debug.Log("GKの位置とポーズを保存しました！");
     }
 
     public void LoadPose()
     {
+        if (PlayerPrefs.HasKey(Prefix + "RootPos_x"))
+        {
+            transform.position = new Vector3(
+                PlayerPrefs.GetFloat(Prefix + "RootPos_x"),
+                PlayerPrefs.GetFloat(Prefix + "RootPos_y"),
+                PlayerPrefs.GetFloat(Prefix + "RootPos_z")
+            );
+        }
+
+        if (hip != null &&
+            PlayerPrefs.HasKey(Prefix + "HipPos_x"))
+        {
+            hip.localPosition = new Vector3(
+                PlayerPrefs.GetFloat(Prefix + "HipPos_x"),
+                PlayerPrefs.GetFloat(Prefix + "HipPos_y"),
+                PlayerPrefs.GetFloat(Prefix + "HipPos_z")
+            );
+        }
+
         LoadBone("hip", hip);
         LoadBone("rShldrBend", rShldrBend);
         LoadBone("lShldrBend", lShldrBend);
@@ -66,16 +97,14 @@ public class GKBonePoseSave : MonoBehaviour
         LoadBone("rThighBend", rThighBend);
         LoadBone("rShin", rShin);
 
-        Debug.Log("GKのポーズを読み込みました！");
+        Debug.Log("GKの位置とポーズを読み込みました！");
     }
 
     void SaveBone(string boneName, Transform bone)
     {
         if (bone == null)
         {
-            Debug.LogWarning(
-                boneName + " がInspectorに設定されていません"
-            );
+            Debug.LogWarning(boneName + " が設定されていません");
             return;
         }
 
@@ -91,30 +120,18 @@ public class GKBonePoseSave : MonoBehaviour
     void LoadBone(string boneName, Transform bone)
     {
         if (bone == null)
-        {
-            Debug.LogWarning(
-                boneName + " がInspectorに設定されていません"
-            );
             return;
-        }
 
         string key = Prefix + boneName;
 
         if (!PlayerPrefs.HasKey(key + "_w"))
-        {
-            Debug.LogWarning(
-                boneName + " の保存データがありません"
-            );
             return;
-        }
 
-        Quaternion rot = new Quaternion(
+        bone.localRotation = new Quaternion(
             PlayerPrefs.GetFloat(key + "_x"),
             PlayerPrefs.GetFloat(key + "_y"),
             PlayerPrefs.GetFloat(key + "_z"),
             PlayerPrefs.GetFloat(key + "_w")
         );
-
-        bone.localRotation = rot;
     }
 }

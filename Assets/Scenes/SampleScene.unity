@@ -290,7 +290,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BallShooter
   ballRigidbody: {fileID: 121008901}
   aimPoint: {fileID: 1954432021}
-  shootSpeed: 8
+  shootSpeed: 5
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -1542,6 +1542,7 @@ MonoBehaviour:
   lShin: {fileID: 1064539491}
   rThighBend: {fileID: 1668017443}
   rShin: {fileID: 2043948256}
+  moveDuration: 0.5
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
