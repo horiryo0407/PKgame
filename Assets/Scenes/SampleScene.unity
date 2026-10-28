@@ -1520,7 +1520,28 @@ MonoBehaviour:
   lShin: {fileID: 1064539491}
   rThighBend: {fileID: 1668017443}
   rShin: {fileID: 2043948256}
-  loadPoseOnStart: 1
+  loadPoseOnStart: 0
+--- !u!114 &1876020111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876020107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a632e84c127cf4640a6698743fe5f73e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKPoseOnSpace
+  hip: {fileID: 1504745534}
+  rShldrBend: {fileID: 2051888559}
+  lShldrBend: {fileID: 2051888558}
+  rForearmBend: {fileID: 1310103143}
+  lForearmBend: {fileID: 1990683619}
+  lThighBend: {fileID: 324708210}
+  lShin: {fileID: 1064539491}
+  rThighBend: {fileID: 1668017443}
+  rShin: {fileID: 2043948256}
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
@@ -1782,6 +1803,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1876020110}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1876020111}
     - targetCorrespondingSourceObject: {fileID: 2495864193595608362, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1504745535}
@@ -1840,6 +1864,11 @@ PrefabInstance:
 --- !u!4 &2051888558 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1103286321890817446, guid: eed95865760703240b7526acd27f1db2, type: 3}
+  m_PrefabInstance: {fileID: 2051888557}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2051888559 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4717282218941392637, guid: eed95865760703240b7526acd27f1db2, type: 3}
   m_PrefabInstance: {fileID: 2051888557}
   m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
