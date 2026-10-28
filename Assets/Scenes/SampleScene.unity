@@ -289,8 +289,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BallShooter
   ballRigidbody: {fileID: 121008901}
-  aimPoint: {fileID: 1954432021}
+  aimPoint: {fileID: 1720958592}
   shootSpeed: 5
+  aimCenter: {fileID: 1876020112}
+  aimMoveSpeed: 3
+  aimWidth: 1.3
+  aimHeight: 1.25
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -1477,6 +1481,11 @@ MonoBehaviour:
   moveArrowLength: 0.45
   moveArrowWidth: 0.012
   moveArrowClickDistance: 18
+--- !u!4 &1720958592 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4058852915679833821, guid: 8242b18fc7252af44a453bcfefda7e7c, type: 3}
+  m_PrefabInstance: {fileID: 722772291}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1732155176 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4306467153498090996, guid: eed95865760703240b7526acd27f1db2, type: 3}
@@ -1600,6 +1609,11 @@ MonoBehaviour:
   rThighBend: {fileID: 1668017443}
   rShin: {fileID: 2043948256}
   moveDuration: 0.5
+--- !u!4 &1876020112 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: eed95865760703240b7526acd27f1db2, type: 3}
+  m_PrefabInstance: {fileID: 2051888557}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
