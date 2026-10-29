@@ -1520,7 +1520,7 @@ MonoBehaviour:
   lShin: {fileID: 1064539491}
   rThighBend: {fileID: 1668017443}
   rShin: {fileID: 2043948256}
-  loadPoseOnStart: 1
+  loadPoseOnStart: 0
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
