@@ -15,10 +15,18 @@ public class BallShooter : MonoBehaviour
     [SerializeField] private float aimWidth = 3f;
     [SerializeField] private float aimHeight = 2f;
 
+    [Header("Sceneごとの動作設定")]
+    [SerializeField] private bool allowAimControl = true;
+    [SerializeField] private bool allowShooting = true;
+    [SerializeField] private bool loadSavedAimOnStart = false;
+    [SerializeField] private bool saveAimWithEnter = false;
+
     private bool hasShot;
 
-    // 照準の初期位置を基準にした左右・上下の移動量
     private Vector2 aimOffset;
+
+    private const string AimXKey = "ShotTarget_X";
+    private const string AimYKey = "ShotTarget_Y";
 
     void Start()
     {
@@ -31,11 +39,28 @@ public class BallShooter : MonoBehaviour
             return;
         }
 
-        // AimCenterのローカル座標で初期位置を取得
+        // AimCenterを基準に初期位置を取得
         Vector3 localPos =
             aimCenter.InverseTransformPoint(aimPoint.position);
 
         aimOffset = new Vector2(localPos.x, localPos.y);
+
+        // 保存データがあれば読み込む
+        if (loadSavedAimOnStart)
+        {
+            if (PlayerPrefs.HasKey(AimXKey) &&
+                PlayerPrefs.HasKey(AimYKey))
+            {
+                aimOffset.x = PlayerPrefs.GetFloat(AimXKey);
+                aimOffset.y = PlayerPrefs.GetFloat(AimYKey);
+
+                Debug.Log("保存したシュート位置を読み込みました。");
+            }
+            else
+            {
+                Debug.LogWarning("シュート位置の保存データがありません。");
+            }
+        }
 
         UpdateAimPosition();
     }
@@ -45,44 +70,56 @@ public class BallShooter : MonoBehaviour
         if (hasShot || aimPoint == null || aimCenter == null)
             return;
 
-        // ゲームパッド・キーボードの照準入力
-        Vector2 input = Vector2.zero;
-
-        if (Gamepad.current != null)
+        // 照準移動
+        if (allowAimControl)
         {
-            input = Gamepad.current.leftStick.ReadValue();
+            Vector2 input = Vector2.zero;
+
+            if (Gamepad.current != null)
+            {
+                input = Gamepad.current.leftStick.ReadValue();
+            }
+
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.leftArrowKey.isPressed)
+                    input.x -= 1f;
+
+                if (Keyboard.current.rightArrowKey.isPressed)
+                    input.x += 1f;
+
+                if (Keyboard.current.downArrowKey.isPressed)
+                    input.y -= 1f;
+
+                if (Keyboard.current.upArrowKey.isPressed)
+                    input.y += 1f;
+            }
+
+            input = Vector2.ClampMagnitude(input, 1f);
+
+            aimOffset += input * aimMoveSpeed * Time.deltaTime;
+
+            aimOffset.x = Mathf.Clamp(
+                aimOffset.x, -aimWidth, aimWidth);
+
+            aimOffset.y = Mathf.Clamp(
+                aimOffset.y, -aimHeight, aimHeight);
+
+            UpdateAimPosition();
         }
 
-        if (Keyboard.current != null)
+        // Enterキーで保存（テスト用）
+        if (saveAimWithEnter &&
+            Keyboard.current != null &&
+            Keyboard.current.enterKey.wasPressedThisFrame)
         {
-            if (Keyboard.current.leftArrowKey.isPressed)
-                input.x -= 1f;
-
-            if (Keyboard.current.rightArrowKey.isPressed)
-                input.x += 1f;
-
-            if (Keyboard.current.downArrowKey.isPressed)
-                input.y -= 1f;
-
-            if (Keyboard.current.upArrowKey.isPressed)
-                input.y += 1f;
+            SaveAimPosition();
         }
 
-        // 斜め移動が速くなりすぎないようにする
-        input = Vector2.ClampMagnitude(input, 1f);
+        // シュートを許可していない場合は終了
+        if (!allowShooting)
+            return;
 
-        aimOffset += input * aimMoveSpeed * Time.deltaTime;
-
-        // 照準をゴールの範囲内に制限
-        aimOffset.x = Mathf.Clamp(
-            aimOffset.x, -aimWidth, aimWidth);
-
-        aimOffset.y = Mathf.Clamp(
-            aimOffset.y, -aimHeight, aimHeight);
-
-        UpdateAimPosition();
-
-        // シュート入力
         bool shootPressed =
             (Gamepad.current != null &&
              Gamepad.current.buttonSouth.wasPressedThisFrame)
@@ -108,10 +145,24 @@ public class BallShooter : MonoBehaviour
             aimCenter.TransformPoint(localPosition);
     }
 
+    // 照準位置を保存する
+    public void SaveAimPosition()
+    {
+        PlayerPrefs.SetFloat(AimXKey, aimOffset.x);
+        PlayerPrefs.SetFloat(AimYKey, aimOffset.y);
+
+        PlayerPrefs.Save();
+
+        Debug.Log(
+            "シュート位置を保存しました！ X：" +
+            aimOffset.x + " Y：" + aimOffset.y
+        );
+    }
+
     public void Shoot()
     {
-        if (hasShot || ballRigidbody == null ||
-            aimPoint == null)
+        if (!allowShooting || hasShot ||
+            ballRigidbody == null || aimPoint == null)
             return;
 
         Vector3 direction =
