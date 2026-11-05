@@ -1,6 +1,5 @@
 
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class GKBonePoseSave : MonoBehaviour
 {
@@ -26,19 +25,12 @@ public class GKBonePoseSave : MonoBehaviour
             LoadPose();
     }
 
-    void Update()
-    {
-        if (Keyboard.current != null &&
-            Keyboard.current.pKey.wasPressedThisFrame)
-        {
-            SavePose();
-        }
-    }
-
+    // GKの位置とポーズを保存
     public void SavePose()
     {
         // GK本体のワールド位置
         Vector3 pos = transform.position;
+
         PlayerPrefs.SetFloat(Prefix + "RootPos_x", pos.x);
         PlayerPrefs.SetFloat(Prefix + "RootPos_y", pos.y);
         PlayerPrefs.SetFloat(Prefix + "RootPos_z", pos.z);
@@ -47,6 +39,7 @@ public class GKBonePoseSave : MonoBehaviour
         if (hip != null)
         {
             Vector3 hipPos = hip.localPosition;
+
             PlayerPrefs.SetFloat(Prefix + "HipPos_x", hipPos.x);
             PlayerPrefs.SetFloat(Prefix + "HipPos_y", hipPos.y);
             PlayerPrefs.SetFloat(Prefix + "HipPos_z", hipPos.z);
@@ -63,9 +56,11 @@ public class GKBonePoseSave : MonoBehaviour
         SaveBone("rShin", rShin);
 
         PlayerPrefs.Save();
-        Debug.Log("GKの位置とポーズを保存しました！");
+
+        Debug.Log("GKの位置とポーズを自動保存しました！");
     }
 
+    // 保存したポーズを読み込む
     public void LoadPose()
     {
         if (PlayerPrefs.HasKey(Prefix + "RootPos_x"))

@@ -345,6 +345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GKPositionTimer
   limitTime: 10
   timerText: {fileID: 933580747}
+  poseSave: {fileID: 1876020111}
 --- !u!4 &204801625
 Transform:
   m_ObjectHideFlags: 0
@@ -697,7 +698,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.999979, z: -0, w: -0.006477976}
-  m_LocalPosition: {x: -0.09, y: 0.99, z: -3.65}
+  m_LocalPosition: {x: -0.09, y: 0.915, z: -3.65}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1148,14 +1149,14 @@ RectTransform:
   m_GameObject: {fileID: 933580746}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.422527, y: 1.3876, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1161317583}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 209}
+  m_AnchoredPosition: {x: 254, y: 198.8}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1064539487 stripped
