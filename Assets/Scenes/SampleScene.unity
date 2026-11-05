@@ -314,6 +314,7 @@ GameObject:
   - component: {fileID: 121008903}
   - component: {fileID: 121008902}
   - component: {fileID: 121008901}
+  - component: {fileID: 121008906}
   m_Layer: 0
   m_Name: Soccer
   m_TagString: Untagged
@@ -441,6 +442,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 174.331, y: -716.665, z: -1530.296}
+--- !u!114 &121008906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121008900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3799a5ec5687e664fb6fcc34b6351cc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BallGKHitDetector
 --- !u!1 &127302667
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,6 +519,7 @@ GameObject:
   m_Component:
   - component: {fileID: 127399214}
   - component: {fileID: 127399215}
+  - component: {fileID: 127399216}
   m_Layer: 0
   m_Name: LeftShinCollider
   m_TagString: Untagged
@@ -551,6 +565,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &127399216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127399213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &324708206 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7215904078887164489, guid: eed95865760703240b7526acd27f1db2, type: 3}
@@ -908,6 +935,7 @@ GameObject:
   m_Component:
   - component: {fileID: 422104044}
   - component: {fileID: 422104045}
+  - component: {fileID: 422104046}
   m_Layer: 0
   m_Name: RightShinCollider
   m_TagString: Untagged
@@ -953,6 +981,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &422104046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422104043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &446886818
 GameObject:
   m_ObjectHideFlags: 0
@@ -963,6 +1004,7 @@ GameObject:
   m_Component:
   - component: {fileID: 446886819}
   - component: {fileID: 446886820}
+  - component: {fileID: 446886821}
   m_Layer: 0
   m_Name: LeftUpperArmCollider
   m_TagString: Untagged
@@ -1008,6 +1050,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &446886821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 446886818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &566994882
 GameObject:
   m_ObjectHideFlags: 0
@@ -1018,6 +1073,7 @@ GameObject:
   m_Component:
   - component: {fileID: 566994883}
   - component: {fileID: 566994884}
+  - component: {fileID: 566994885}
   m_Layer: 0
   m_Name: BodyCollider
   m_TagString: Untagged
@@ -1063,6 +1119,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &566994885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566994882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 1
 --- !u!1 &573743433
 GameObject:
   m_ObjectHideFlags: 0
@@ -1073,6 +1142,7 @@ GameObject:
   m_Component:
   - component: {fileID: 573743434}
   - component: {fileID: 573743435}
+  - component: {fileID: 573743436}
   m_Layer: 0
   m_Name: HeadCollider
   m_TagString: Untagged
@@ -1118,6 +1188,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &573743436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 573743433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 3
 --- !u!1 &615810269
 GameObject:
   m_ObjectHideFlags: 0
@@ -1524,6 +1607,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1229303841}
   - component: {fileID: 1229303842}
+  - component: {fileID: 1229303843}
   m_Layer: 0
   m_Name: LeftForearmCollider
   m_TagString: Untagged
@@ -1569,6 +1653,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1229303843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229303840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &1310103139 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5636320875646290183, guid: eed95865760703240b7526acd27f1db2, type: 3}
@@ -2006,6 +2103,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1575107597}
   - component: {fileID: 1575107598}
+  - component: {fileID: 1575107599}
   m_Layer: 0
   m_Name: RightForearmCollider
   m_TagString: Untagged
@@ -2051,6 +2149,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1575107599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1575107596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &1649232295 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5917044731307735041, guid: 8242b18fc7252af44a453bcfefda7e7c, type: 3}
@@ -2439,6 +2550,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1893760957}
   - component: {fileID: 1893760958}
+  - component: {fileID: 1893760959}
   m_Layer: 0
   m_Name: RightUpperArmCollider
   m_TagString: Untagged
@@ -2484,6 +2596,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1893760959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893760956}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2570,6 +2695,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2014854406}
   - component: {fileID: 2014854407}
+  - component: {fileID: 2014854408}
   m_Layer: 0
   m_Name: RightThighCollider
   m_TagString: Untagged
@@ -2615,6 +2741,19 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2014854408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2014854405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
 --- !u!1 &2043948252 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6767236081591630761, guid: eed95865760703240b7526acd27f1db2, type: 3}
@@ -2909,6 +3048,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2127503415}
   - component: {fileID: 2127503416}
+  - component: {fileID: 2127503417}
   m_Layer: 0
   m_Name: LeftThighCollider
   m_TagString: Untagged
@@ -2954,6 +3094,64 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2127503417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2127503414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e6acfa74161c946884565ab79a2b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKHitPoint
+  point: 2
+--- !u!1 &2144376555
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2144376557}
+  - component: {fileID: 2144376556}
+  m_Layer: 0
+  m_Name: ScoreManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2144376556
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2144376555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59cbcb4e38d53114fa0ca768afdab3e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
+  scoreText: {fileID: 1778314450}
+--- !u!4 &2144376557
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2144376555}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.16343, y: 1.04659, z: -5.64897}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2972,3 +3170,4 @@ SceneRoots:
   - {fileID: 1395975411}
   - {fileID: 85209332}
   - {fileID: 29435884}
+  - {fileID: 2144376557}
