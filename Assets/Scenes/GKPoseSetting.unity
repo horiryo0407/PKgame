@@ -295,6 +295,10 @@ MonoBehaviour:
   aimMoveSpeed: 0.5
   aimWidth: 0.5
   aimHeight: 0.5
+  allowAimControl: 1
+  allowShooting: 1
+  loadSavedAimOnStart: 0
+  saveAimWithEnter: 0
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -1499,12 +1503,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GKMouseBoneDrag
   targetCamera: {fileID: 0}
   ringRadius: 0.18
-  ringWidth: 0.008
+  ringWidth: 0.01
   clickDistance: 14
   rotationSensitivity: 1
   shoulderLimit: 85
   bendLimit: 120
-  bendSideLimit: 20
+  bendSideLimit: 90
   thighLimit: 90
   thighSideLimit: 45
   shoulderBlueLimit: 35
