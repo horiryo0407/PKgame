@@ -290,13 +290,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BallShooter
   ballRigidbody: {fileID: 121008901}
   aimPoint: {fileID: 1954432021}
-  shootSpeed: 5
+  shootSpeed: 1
   aimCenter: {fileID: 1393235980}
   aimMoveSpeed: 0.5
   aimWidth: 0.5
   aimHeight: 0.5
   allowAimControl: 1
-  allowShooting: 0
+  allowShooting: 1
   loadSavedAimOnStart: 0
   saveAimWithEnter: 1
 --- !u!4 &127302669
