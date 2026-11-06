@@ -1,9 +1,13 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
 public class GKMouseBoneDrag : MonoBehaviour
 {
+    [Header("操作設定")]
+    public bool enableEditing = true;
+
     [Header("カメラ")]
     public Camera targetCamera;
 
@@ -92,6 +96,10 @@ public class GKMouseBoneDrag : MonoBehaviour
 
     void Start()
     {
+        // 編集OFFなら操作用の円・矢印を作らない
+        if (!enableEditing)
+            return;
+
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
@@ -128,6 +136,10 @@ public class GKMouseBoneDrag : MonoBehaviour
 
     void Update()
     {
+        // 編集OFFならマウス操作を受け付けない
+        if (!enableEditing)
+            return;
+
         if (Mouse.current == null || targetCamera == null)
         {
             return;

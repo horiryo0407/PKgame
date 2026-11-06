@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using TMPro;
 
@@ -19,6 +18,10 @@ public class ScoreManager : MonoBehaviour
         }
 
         Instance = this;
+
+        // シーン移動後もScoreManagerを残す
+        DontDestroyOnLoad(gameObject);
+
         UpdateScoreText();
     }
 
