@@ -44,6 +44,10 @@ public class GKMouseBoneDrag : MonoBehaviour
     public Transform playerRoot;
     public float moveSensitivity = 0.01f;
 
+    [Header("GK移動範囲（Box Collider）")]
+    [Tooltip("ゴール内側に合わせたGKMoveAreaのBox Collider")]
+    public BoxCollider moveAreaCollider;
+
     [Header("移動矢印")]
     public float moveArrowLength = 0.65f;
     public float moveArrowWidth = 0.025f;
@@ -941,7 +945,38 @@ public class GKMouseBoneDrag : MonoBehaviour
             Vector2.Dot(mouseDelta, screenAxis)
             * moveSensitivity;
 
+        // カメラ正面から見た左右・上下だけ移動
         playerRoot.position += selectedMoveAxis * amount;
+
+        // Box Colliderの内側にGKの基準位置を収める
+        if (moveAreaCollider != null)
+        {
+            Transform areaTransform = moveAreaCollider.transform;
+
+            // GKのワールド位置を、移動範囲のローカル座標に変換
+            Vector3 localPosition =
+                areaTransform.InverseTransformPoint(playerRoot.position);
+
+            // Box ColliderのCenterとSizeから左右・上下の限界を取得
+            Vector3 center = moveAreaCollider.center;
+            Vector3 halfSize = moveAreaCollider.size * 0.5f;
+
+            localPosition.x = Mathf.Clamp(
+                localPosition.x,
+                center.x - halfSize.x,
+                center.x + halfSize.x
+            );
+
+            localPosition.y = Mathf.Clamp(
+                localPosition.y,
+                center.y - halfSize.y,
+                center.y + halfSize.y
+            );
+
+            // Z（前後）は変更せず、元の位置を維持
+            playerRoot.position =
+                areaTransform.TransformPoint(localPosition);
+        }
 
         previousMousePosition = mousePosition;
 
