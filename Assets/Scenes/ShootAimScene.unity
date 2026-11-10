@@ -313,6 +313,7 @@ MonoBehaviour:
   allowShooting: 1
   loadSavedAimOnStart: 0
   saveAimWithEnter: 1
+  sceneTransition: {fileID: 1944556297}
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -2803,7 +2804,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
   nextSceneName: GKPoseSetting
-  autoTransition: 1
   transitionDelay: 12
 --- !u!4 &1944556298
 Transform:
