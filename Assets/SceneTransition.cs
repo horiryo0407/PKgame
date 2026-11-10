@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
@@ -24,11 +25,13 @@ public class SceneTransition : MonoBehaviour
         }
     }
 
+    // シュートした瞬間に呼び出す
     public void StartTransitionTimer()
     {
         if (isTransitioning) return;
 
         Debug.Log("シュート後のタイマーを開始しました！");
+
         StartCoroutine(TransitionAfterShot());
     }
 
@@ -40,6 +43,24 @@ public class SceneTransition : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(transitionDelay);
 
+        // シュート終了を記録
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.CompleteShot();
+        }
+        else
+        {
+            Debug.LogError("ScoreManagerが見つかりません！");
+        }
+
+        // 10投終了ならシーン移動しない
+        if (ScoreManager.Instance != null &&
+            ScoreManager.Instance.IsGameFinished)
+        {
+            Debug.Log("10投終了！試合終了です！");
+            yield break;
+        }
+
         Debug.Log("シーン遷移を実行します！");
 
         SceneManager.LoadScene(nextSceneName);
@@ -50,6 +71,7 @@ public class SceneTransition : MonoBehaviour
         if (isTransitioning) return;
 
         isTransitioning = true;
+
         SceneManager.LoadScene(sceneName);
     }
 }
