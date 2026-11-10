@@ -22,12 +22,23 @@ public class GKPoseOnSpace : MonoBehaviour
     private const string Prefix = "GKPose_";
     private bool poseApplied = false;
 
+
     void Update()
     {
-        if (poseApplied || Keyboard.current == null)
+        if (poseApplied)
             return;
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        // キーボード：スペースキー
+        bool keyboardPressed =
+            Keyboard.current != null &&
+            Keyboard.current.spaceKey.wasPressedThisFrame;
+
+        // ゲームパッド：Aボタン / PlayStationの×ボタン
+        bool gamepadPressed =
+            Gamepad.current != null &&
+            Gamepad.current.buttonSouth.wasPressedThisFrame;
+
+        if (keyboardPressed || gamepadPressed)
         {
             if (PlayerPrefs.HasKey(Prefix + "RootPos_x") &&
                 PlayerPrefs.HasKey(Prefix + "hip_w"))
@@ -42,6 +53,7 @@ public class GKPoseOnSpace : MonoBehaviour
             }
         }
     }
+
 
     IEnumerator MoveToSavedPose()
     {

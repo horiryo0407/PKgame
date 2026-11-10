@@ -42,10 +42,15 @@ public class GKSlowDive : MonoBehaviour
 
     void Update()
     {
-        // スペースキーで開始
-        if (!sequenceStarted &&
-            Keyboard.current != null &&
-            Keyboard.current.spaceKey.wasPressedThisFrame)
+        // スペースキー または ゲームパッドA／×ボタン
+        bool startPressed =
+            (Keyboard.current != null &&
+             Keyboard.current.spaceKey.wasPressedThisFrame)
+            ||
+            (Gamepad.current != null &&
+             Gamepad.current.buttonSouth.wasPressedThisFrame);
+
+        if (!sequenceStarted && startPressed)
         {
             BeginSequence();
         }
