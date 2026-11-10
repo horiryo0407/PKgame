@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,8 +20,10 @@ public class BallShooter : MonoBehaviour
     [SerializeField] private bool loadSavedAimOnStart = false;
     [SerializeField] private bool saveAimWithEnter = false;
 
-    private bool hasShot;
+    [Header("シーン遷移")]
+    [SerializeField] private SceneTransition sceneTransition;
 
+    private bool hasShot;
     private Vector2 aimOffset;
 
     private const string AimXKey = "ShotTarget_X";
@@ -30,8 +31,7 @@ public class BallShooter : MonoBehaviour
 
     void Start()
     {
-        if (aimPoint == null)
-            return;
+        if (aimPoint == null) return;
 
         if (aimCenter == null)
         {
@@ -39,13 +39,11 @@ public class BallShooter : MonoBehaviour
             return;
         }
 
-        // AimCenterを基準に初期位置を取得
         Vector3 localPos =
             aimCenter.InverseTransformPoint(aimPoint.position);
 
         aimOffset = new Vector2(localPos.x, localPos.y);
 
-        // 保存データがあれば読み込む
         if (loadSavedAimOnStart)
         {
             if (PlayerPrefs.HasKey(AimXKey) &&
@@ -70,7 +68,7 @@ public class BallShooter : MonoBehaviour
         if (hasShot || aimPoint == null || aimCenter == null)
             return;
 
-        // 照準移動
+        // 照準操作
         if (allowAimControl)
         {
             Vector2 input = Vector2.zero;
@@ -108,7 +106,7 @@ public class BallShooter : MonoBehaviour
             UpdateAimPosition();
         }
 
-        // Enterキーで保存（テスト用）
+        // 照準位置の保存
         if (saveAimWithEnter &&
             Keyboard.current != null &&
             Keyboard.current.enterKey.wasPressedThisFrame)
@@ -116,10 +114,9 @@ public class BallShooter : MonoBehaviour
             SaveAimPosition();
         }
 
-        // シュートを許可していない場合は終了
-        if (!allowShooting)
-            return;
+        if (!allowShooting) return;
 
+        // シュート入力
         bool shootPressed =
             (Gamepad.current != null &&
              Gamepad.current.buttonSouth.wasPressedThisFrame)
@@ -135,17 +132,13 @@ public class BallShooter : MonoBehaviour
 
     void UpdateAimPosition()
     {
-        Vector3 localPosition = new Vector3(
-            aimOffset.x,
-            aimOffset.y,
-            0f
-        );
+        Vector3 localPosition =
+            new Vector3(aimOffset.x, aimOffset.y, 0f);
 
         aimPoint.position =
             aimCenter.TransformPoint(localPosition);
     }
 
-    // 照準位置を保存する
     public void SaveAimPosition()
     {
         PlayerPrefs.SetFloat(AimXKey, aimOffset.x);
@@ -155,15 +148,18 @@ public class BallShooter : MonoBehaviour
 
         Debug.Log(
             "シュート位置を保存しました！ X：" +
-            aimOffset.x + " Y：" + aimOffset.y
-        );
+            aimOffset.x + " Y：" + aimOffset.y);
     }
 
     public void Shoot()
     {
-        if (!allowShooting || hasShot ||
-            ballRigidbody == null || aimPoint == null)
+        if (!allowShooting ||
+            hasShot ||
+            ballRigidbody == null ||
+            aimPoint == null)
+        {
             return;
+        }
 
         Vector3 direction =
             aimPoint.position - ballRigidbody.position;
@@ -172,6 +168,7 @@ public class BallShooter : MonoBehaviour
             return;
 
         direction.Normalize();
+
         hasShot = true;
 
         ballRigidbody.useGravity = false;
@@ -182,5 +179,16 @@ public class BallShooter : MonoBehaviour
 
         ballRigidbody.linearVelocity =
             direction * shootSpeed;
+
+        // シュートした瞬間にタイマー開始
+        if (sceneTransition != null)
+        {
+            sceneTransition.StartTransitionTimer();
+        }
+        else
+        {
+            Debug.LogError(
+                "Scene Transitionが設定されていません。");
+        }
     }
 }
