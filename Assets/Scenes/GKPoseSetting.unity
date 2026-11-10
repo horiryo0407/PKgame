@@ -1648,6 +1648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3aa7fcdf32eb7e4e81f0e52b79b2cbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKMouseBoneDrag
+  enableEditing: 1
   targetCamera: {fileID: 0}
   ringRadius: 0.18
   ringWidth: 0.008
@@ -1727,6 +1728,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3aa7fcdf32eb7e4e81f0e52b79b2cbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKMouseBoneDrag
+  enableEditing: 1
   targetCamera: {fileID: 0}
   ringRadius: 0.18
   ringWidth: 0.01
