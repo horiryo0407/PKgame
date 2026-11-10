@@ -6,15 +6,12 @@ using System.Collections;
 public class SceneTransition : MonoBehaviour
 {
     [Header("遷移先")]
-    [SerializeField] private string nextSceneName;
+    [SerializeField] private string nextSceneName = "GKPoseSetting";
 
-    [Header("シュート後の自動遷移")]
+    [Header("シュート後の遷移時間")]
     [SerializeField] private float transitionDelay = 5f;
 
     private bool isTransitioning = false;
-
-    // 次のキーパーを記録する
-    private const string KeeperKey = "NextKeeperIsShooter";
 
     void Update()
     {
@@ -27,35 +24,27 @@ public class SceneTransition : MonoBehaviour
         }
     }
 
-    // シュートした瞬間に呼び出す
     public void StartTransitionTimer()
     {
         if (isTransitioning) return;
 
+        Debug.Log("シュート後のタイマーを開始しました！");
         StartCoroutine(TransitionAfterShot());
     }
 
-    // シュート後のタイマー
     IEnumerator TransitionAfterShot()
     {
         isTransitioning = true;
 
-        Debug.Log(transitionDelay + "秒後にシーンを切り替えます。");
+        Debug.Log(transitionDelay + "秒後に遷移します。");
 
-        yield return new WaitForSeconds(transitionDelay);
+        yield return new WaitForSecondsRealtime(transitionDelay);
 
-        // 次のキーパーを交替
-        bool nextKeeper = PlayerPrefs.GetInt(KeeperKey, 0) == 0;
-        PlayerPrefs.SetInt(KeeperKey, nextKeeper ? 1 : 0);
-        PlayerPrefs.Save();
-
-        Debug.Log("次のキーパー：" +
-            (nextKeeper ? "Shooter" : "Dida"));
+        Debug.Log("シーン遷移を実行します！");
 
         SceneManager.LoadScene(nextSceneName);
     }
 
-    // シーン移動
     public void ChangeScene(string sceneName)
     {
         if (isTransitioning) return;
