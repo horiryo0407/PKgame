@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,10 +13,22 @@ public class ShooterKick : MonoBehaviour
 
     void Update()
     {
-        // テスト用：スペースキーでキック
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        // ゲームパッド：Aボタン / ×ボタン
+        bool gamepadKick =
+            Gamepad.current != null &&
+            Gamepad.current.buttonSouth.wasPressedThisFrame;
+
+        // キーボード：スペースキー（テスト用）
+        bool keyboardKick =
+            Keyboard.current != null &&
+            Keyboard.current.spaceKey.wasPressedThisFrame;
+
+        if (gamepadKick || keyboardKick)
         {
-            animator.SetTrigger("Kick");
+            if (animator != null)
+            {
+                animator.SetTrigger("Kick");
+            }
         }
     }
 }
