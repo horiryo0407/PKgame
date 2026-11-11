@@ -48,6 +48,21 @@ public class GKMouseBoneDrag : MonoBehaviour
     [Tooltip("ゴール内側に合わせたGKMoveAreaのBox Collider")]
     public BoxCollider moveAreaCollider;
 
+    [Header("プレイヤー全体の回転")]
+    [Tooltip("回転の中心にする腰のhipボーン")]
+    public Transform wholeBodyPivot;
+    [Tooltip("腰に表示する全体回転リングの半径")]
+    public float wholeBodyRingRadius = 0.55f;
+    [Tooltip("全体回転リングの太さ")]
+    public float wholeBodyRingWidth = 0.012f;
+    [Tooltip("全体回転リングをクリックできる距離（ピクセル）")]
+    public float wholeBodyRingClickDistance = 18f;
+    [Tooltip("全体回転の感度")]
+    [Range(0.1f, 2f)]
+    public float wholeBodyRotationSensitivity = 1f;
+    [Tooltip("リングをドラッグしたときの回転方向を反転する")]
+    public bool invertWholeBodyRotation = false;
+
     [Header("移動矢印")]
     public float moveArrowLength = 0.65f;
     public float moveArrowWidth = 0.025f;
@@ -95,6 +110,10 @@ public class GKMouseBoneDrag : MonoBehaviour
     private Plane rotationPlane;
     private bool useWorldPlane;
 
+    private LineRenderer wholeBodyRotationLine;
+    private bool draggingWholeBodyRotation;
+    private float previousWholeBodyRingAngle;
+
     private Vector2[] dragRingScreenPoints;
     private float previousRingAngle;
 
@@ -111,6 +130,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         CreateRotationRings();
         CreateMoveArrows();
+        CreateWholeBodyRotationRing();
 
         // 起動時から移動矢印を表示
         GKBoneHandle[] handles =
@@ -150,6 +170,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         }
 
         UpdateMoveArrowPositions();
+        UpdateWholeBodyRotationRing();
 
         Vector2 mousePosition =
             Mouse.current.position.ReadValue();
@@ -161,7 +182,11 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         if (Mouse.current.leftButton.isPressed)
         {
-            if (selectedRing != null)
+            if (draggingWholeBodyRotation)
+            {
+                RotateWholePlayer(mousePosition);
+            }
+            else if (selectedRing != null)
             {
                 RotateSelectedBone(mousePosition);
             }
@@ -176,8 +201,193 @@ public class GKMouseBoneDrag : MonoBehaviour
             selectedRing = null;
             selectedMoveHandle = null;
             draggingMoveArrow = false;
+            draggingWholeBodyRotation = false;
             dragRingScreenPoints = null;
         }
+    }
+
+    // ------------------------------
+    // プレイヤー全体の回転リング
+    // ------------------------------
+
+    void CreateWholeBodyRotationRing()
+    {
+        if (wholeBodyPivot == null)
+        {
+            // Inspectorで未設定なら、名前がhipのボーンを探す
+            Transform[] allChildren =
+                GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform child in allChildren)
+            {
+                if (child.name.ToLowerInvariant() == "hip")
+                {
+                    wholeBodyPivot = child;
+                    break;
+                }
+            }
+        }
+
+        if (wholeBodyPivot == null)
+        {
+            Debug.LogWarning(
+                "全体回転リング：Whole Body Pivotが未設定です。Inspectorでhipを設定してください。");
+            return;
+        }
+
+        GameObject ringObject =
+            new GameObject("WholeBodyRotationRing");
+
+        ringObject.transform.SetParent(transform, false);
+
+        wholeBodyRotationLine =
+            ringObject.AddComponent<LineRenderer>();
+
+        wholeBodyRotationLine.useWorldSpace = true;
+        wholeBodyRotationLine.loop = true;
+        wholeBodyRotationLine.positionCount = 65;
+        wholeBodyRotationLine.startWidth = wholeBodyRingWidth;
+        wholeBodyRotationLine.endWidth = wholeBodyRingWidth;
+        wholeBodyRotationLine.startColor = new Color(1f, 0.65f, 0f, 1f);
+        wholeBodyRotationLine.endColor = new Color(1f, 0.65f, 0f, 1f);
+        wholeBodyRotationLine.numCapVertices = 3;
+        wholeBodyRotationLine.numCornerVertices = 3;
+        wholeBodyRotationLine.alignment = LineAlignment.View;
+
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader != null)
+        {
+            wholeBodyRotationLine.material = new Material(shader);
+            wholeBodyRotationLine.material.renderQueue = 5000;
+        }
+
+        UpdateWholeBodyRotationRing();
+    }
+
+    void UpdateWholeBodyRotationRing()
+    {
+        if (wholeBodyRotationLine == null ||
+            wholeBodyPivot == null ||
+            targetCamera == null)
+        {
+            return;
+        }
+
+        Vector3 center =
+            wholeBodyPivot.position
+            - targetCamera.transform.forward * 0.04f;
+
+        Vector3 right = targetCamera.transform.right;
+        Vector3 up = targetCamera.transform.up;
+
+        for (int i = 0; i < 65; i++)
+        {
+            float angle = i * Mathf.PI * 2f / 64f;
+
+            Vector3 point =
+                center
+                + right * Mathf.Cos(angle) * wholeBodyRingRadius
+                + up * Mathf.Sin(angle) * wholeBodyRingRadius;
+
+            wholeBodyRotationLine.SetPosition(i, point);
+        }
+    }
+
+    float GetWholeBodyRingScreenDistance(Vector2 mousePosition)
+    {
+        if (wholeBodyRotationLine == null ||
+            !wholeBodyRotationLine.enabled ||
+            targetCamera == null)
+        {
+            return float.MaxValue;
+        }
+
+        float nearest = float.MaxValue;
+
+        for (int i = 0; i < wholeBodyRotationLine.positionCount - 1; i++)
+        {
+            Vector3 screenA = targetCamera.WorldToScreenPoint(
+                wholeBodyRotationLine.GetPosition(i));
+
+            Vector3 screenB = targetCamera.WorldToScreenPoint(
+                wholeBodyRotationLine.GetPosition(i + 1));
+
+            if (screenA.z <= 0f || screenB.z <= 0f)
+                continue;
+
+            float distance = DistanceToSegment(
+                mousePosition,
+                new Vector2(screenA.x, screenA.y),
+                new Vector2(screenB.x, screenB.y));
+
+            if (distance < nearest)
+                nearest = distance;
+        }
+
+        return nearest;
+    }
+
+    void BeginWholeBodyRotation(Vector2 mousePosition)
+    {
+        if (wholeBodyPivot == null || playerRoot == null)
+            return;
+
+        Vector3 centerScreen =
+            targetCamera.WorldToScreenPoint(wholeBodyPivot.position);
+
+        Vector2 center = new Vector2(
+            centerScreen.x,
+            centerScreen.y);
+
+        Vector2 fromCenter = mousePosition - center;
+
+        previousWholeBodyRingAngle =
+            Mathf.Atan2(fromCenter.y, fromCenter.x) * Mathf.Rad2Deg;
+
+        draggingWholeBodyRotation = true;
+    }
+
+    void RotateWholePlayer(Vector2 mousePosition)
+    {
+        if (!draggingWholeBodyRotation ||
+            wholeBodyPivot == null ||
+            playerRoot == null)
+        {
+            return;
+        }
+
+        Vector3 centerScreen =
+            targetCamera.WorldToScreenPoint(wholeBodyPivot.position);
+
+        Vector2 center = new Vector2(
+            centerScreen.x,
+            centerScreen.y);
+
+        Vector2 fromCenter = mousePosition - center;
+
+        float currentAngle =
+            Mathf.Atan2(fromCenter.y, fromCenter.x) * Mathf.Rad2Deg;
+
+        float angle = Mathf.DeltaAngle(
+            previousWholeBodyRingAngle,
+            currentAngle);
+
+        if (invertWholeBodyRotation)
+            angle = -angle;
+
+        angle *= wholeBodyRotationSensitivity;
+
+        // カメラ正面から見た円の軸を使い、hipを中心に全身を回転
+        Vector3 rotationAxis = targetCamera.transform.forward;
+
+        playerRoot.RotateAround(
+            wholeBodyPivot.position,
+            rotationAxis,
+            angle);
+
+        previousWholeBodyRingAngle = currentAngle;
+        UpdateMoveArrowPositions();
+        UpdateWholeBodyRotationRing();
     }
 
     // ------------------------------
@@ -517,6 +727,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         selectedRing = null;
         selectedMoveHandle = null;
         draggingMoveArrow = false;
+        draggingWholeBodyRotation = false;
 
         // 移動矢印をクリックしたか確認
         if (moveGizmoVisible)
@@ -553,6 +764,17 @@ public class GKMouseBoneDrag : MonoBehaviour
                 previousMousePosition = mousePosition;
                 return;
             }
+        }
+
+        // プレイヤー全体の回転リングを先に判定
+        float wholeBodyDistance =
+            GetWholeBodyRingScreenDistance(mousePosition);
+
+        if (wholeBodyDistance <= wholeBodyRingClickDistance)
+        {
+            BeginWholeBodyRotation(mousePosition);
+            if (draggingWholeBodyRotation)
+                return;
         }
 
         // 先にhipなどの移動ハンドルを探す
