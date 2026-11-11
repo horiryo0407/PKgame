@@ -1,4 +1,3 @@
-
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -52,7 +51,7 @@ public class SceneTransition : MonoBehaviour
         // 新しいシーンのカメラを取得
         if (cameraRig == null)
         {
-            cameraRig = FindFirstObjectByType<ShooterCameraRig>();
+            cameraRig = FindAnyObjectByType<ShooterCameraRig>();
         }
 
         // エイムカメラに戻す
@@ -61,6 +60,25 @@ public class SceneTransition : MonoBehaviour
             cameraRig.StartAim();
             Debug.Log("カメラをAimに戻しました！");
         }
+
+        //ユニフォームの色を、今のシューターに合わせる
+        ApplyUniform();
+    }
+
+    //今のシューターが1Pなら1、2Pなら2を渡す（キーパーは自動で逆になる）
+    private void ApplyUniform()
+    {
+        TurnSkinManager skin = FindAnyObjectByType<TurnSkinManager>();
+        if (skin != null)
+        {
+            skin.ApplyTurn(currentPlayer + 1);
+        }
+    }
+
+    //最初のシーンでも色を合わせる
+    void Start()
+    {
+        ApplyUniform();
     }
 
     void Update()
