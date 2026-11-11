@@ -24,15 +24,11 @@ public class ScoreManager : MonoBehaviour
     private int player1Shots = 0;
     private int player2Shots = 0;
 
-    // 0 = プレイヤー1、1 = プレイヤー2
-    private int currentPlayer = 0;
-
     // 全体のシュート回数
     private int totalShots = 0;
 
     private const int MaxShots = 10;
 
-    public int CurrentPlayer => currentPlayer;
     public int TotalShots => totalShots;
     public bool IsGameFinished => totalShots >= MaxShots;
 
@@ -64,6 +60,14 @@ public class ScoreManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     // シーン移動後に呼び出される
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -92,6 +96,8 @@ public class ScoreManager : MonoBehaviour
         if (IsGameFinished)
             return;
 
+        int currentPlayer = SceneTransition.CurrentPlayer;
+
         if (currentPlayer == 0)
             player1Score += point;
         else
@@ -106,12 +112,13 @@ public class ScoreManager : MonoBehaviour
     }
 
     // 1回のシュート終了時に呼び出す
-    public void CompleteShot()
+    public void CompleteShot(int shotPlayer)
     {
         if (IsGameFinished)
             return;
 
-        if (currentPlayer == 0)
+        // 今回シュートしたプレイヤーの回数を増やす
+        if (shotPlayer == 0)
             player1Shots++;
         else
             player2Shots++;
@@ -125,13 +132,14 @@ public class ScoreManager : MonoBehaviour
             Debug.Log("試合終了！");
             ShowFinalResult();
         }
-        else
-        {
-            // 次のプレイヤーに交代
-            currentPlayer = 1 - currentPlayer;
-        }
 
         UpdateScoreText();
+    }
+
+    // 以前の引数なし呼び出しにも対応
+    public void CompleteShot()
+    {
+        CompleteShot(SceneTransition.CurrentPlayer);
     }
 
     // 最終結果
@@ -154,9 +162,17 @@ public class ScoreManager : MonoBehaviour
         player1Shots = 0;
         player2Shots = 0;
 
-        currentPlayer = 0;
         totalShots = 0;
 
+        // ターンもプレイヤー1に戻す
+        SceneTransition.ResetTurn();
+
+        UpdateScoreText();
+    }
+
+    // 外部から表示を更新する
+    public void RefreshDisplay()
+    {
         UpdateScoreText();
     }
 
@@ -188,7 +204,7 @@ public class ScoreManager : MonoBehaviour
                 turnText.text =
                     "第 " + (totalShots + 1) +
                     " 投 / 10　プレイヤー" +
-                    (currentPlayer + 1);
+                    (SceneTransition.CurrentPlayer + 1);
             }
         }
     }
