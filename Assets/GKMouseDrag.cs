@@ -20,6 +20,26 @@ public class GKMouseBoneDrag : MonoBehaviour
     [Range(0.1f, 2f)]
     public float rotationSensitivity = 1f;
 
+    [Header("基本の関節回転制限（度）")]
+    public float shoulderLimit = 85f;
+    public float bendLimit = 120f;
+    public float bendSideLimit = 20f;
+    public float thighLimit = 90f;
+    public float thighSideLimit = 45f;
+
+    [Header("個別にきつく制限する軸（度）")]
+    [Tooltip("肩の青リング（横軸）の制限")]
+    [Range(5f, 90f)]
+    public float shoulderBlueLimit = 35f;
+
+    [Tooltip("太もも・股関節の赤リング（縦軸）の制限")]
+    [Range(5f, 90f)]
+    public float hipRedLimit = 45f;
+
+    [Tooltip("すね・膝関節の赤リング（縦軸）の制限")]
+    [Range(5f, 135f)]
+    public float kneeRedLimit = 70f;
+
     [Header("胴体の左右移動")]
     public Transform playerRoot;
     public float moveSensitivity = 0.01f;
@@ -31,20 +51,15 @@ public class GKMouseBoneDrag : MonoBehaviour
     [Header("プレイヤー全体の回転")]
     [Tooltip("回転の中心にする腰のhipボーン")]
     public Transform wholeBodyPivot;
-
     [Tooltip("腰に表示する全体回転リングの半径")]
     public float wholeBodyRingRadius = 0.55f;
-
     [Tooltip("全体回転リングの太さ")]
     public float wholeBodyRingWidth = 0.012f;
-
     [Tooltip("全体回転リングをクリックできる距離（ピクセル）")]
     public float wholeBodyRingClickDistance = 18f;
-
     [Tooltip("全体回転の感度")]
     [Range(0.1f, 2f)]
     public float wholeBodyRotationSensitivity = 1f;
-
     [Tooltip("リングをドラッグしたときの回転方向を反転する")]
     public bool invertWholeBodyRotation = false;
 
@@ -76,12 +91,17 @@ public class GKMouseBoneDrag : MonoBehaviour
         public Transform bone;
         public LineRenderer line;
         public Vector3 localAxis;
+
+        public float currentAngle;
+        public float minAngle;
+        public float maxAngle;
     }
 
     private readonly List<RotationRing> rings =
         new List<RotationRing>();
 
     private RotationRing selectedRing;
+    private GKBoneHandle selectedMoveHandle;
 
     private Vector2 previousMousePosition;
     private Vector3 selectedWorldAxis;
@@ -179,6 +199,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         if (Mouse.current.leftButton.wasReleasedThisFrame)
         {
             selectedRing = null;
+            selectedMoveHandle = null;
             draggingMoveArrow = false;
             draggingWholeBodyRotation = false;
             dragRingScreenPoints = null;
@@ -234,7 +255,6 @@ public class GKMouseBoneDrag : MonoBehaviour
         wholeBodyRotationLine.alignment = LineAlignment.View;
 
         Shader shader = Shader.Find("Sprites/Default");
-
         if (shader != null)
         {
             wholeBodyRotationLine.material = new Material(shader);
@@ -542,7 +562,7 @@ public class GKMouseBoneDrag : MonoBehaviour
     }
 
     // ------------------------------
-    // 赤い関節回転リングを作成
+    // 回転リングを作成
     // ------------------------------
 
     void CreateRotationRings()
@@ -561,12 +581,12 @@ public class GKMouseBoneDrag : MonoBehaviour
                 continue;
             }
 
-            // 全関節を赤いリング1本に統一
+            // 青いリングだけを作成する
             CreateRing(
                 handle.transform,
                 Vector3.forward,
-                Color.red,
-                "Ring_Red");
+                Color.blue,
+                "Ring_Z");
         }
     }
 
@@ -610,17 +630,87 @@ public class GKMouseBoneDrag : MonoBehaviour
             float x = Mathf.Cos(angle) * ringRadius;
             float y = Mathf.Sin(angle) * ringRadius;
 
-            Vector3 point = new Vector3(x, y, 0f);
+            Vector3 point;
+
+            if (axis == Vector3.right)
+            {
+                point = new Vector3(0f, y, x);
+            }
+            else
+            {
+                point = new Vector3(x, y, 0f);
+            }
 
             line.SetPosition(i, point);
         }
+
+        float limit = GetJointLimit(bone.name, axis);
 
         rings.Add(new RotationRing
         {
             bone = bone,
             line = line,
-            localAxis = axis
+            localAxis = axis,
+            currentAngle = 0f,
+            minAngle = -limit,
+            maxAngle = limit
         });
+    }
+
+    // ------------------------------
+    // 部位ごとの回転制限
+    // ------------------------------
+
+    float GetJointLimit(string boneName, Vector3 axis)
+    {
+        string name = boneName.ToLowerInvariant();
+
+        bool isRedRing = axis == Vector3.right;
+        bool isBlueRing = axis == Vector3.forward;
+
+        // 肩：青リングを厳しく制限
+        if (name.Contains("shldr") ||
+            name.Contains("shoulder") ||
+            name.Contains("upperarm") ||
+            name.Contains("upper_arm"))
+        {
+            if (isBlueRing)
+                return shoulderBlueLimit;
+
+            return shoulderLimit;
+        }
+
+        // 肘・前腕
+        if (name.Contains("forearm") ||
+            name.Contains("elbow"))
+        {
+            return isRedRing
+                ? bendLimit
+                : bendSideLimit;
+        }
+
+        // すね・膝：赤リングを厳しく制限
+        if (name.Contains("shin") ||
+            name.Contains("calf") ||
+            name.Contains("knee"))
+        {
+            if (isRedRing)
+                return kneeRedLimit;
+
+            return bendSideLimit;
+        }
+
+        // 太もも・股関節：赤リングを厳しく制限
+        if (name.Contains("thigh") ||
+            name.Contains("upleg"))
+        {
+            if (isRedRing)
+                return hipRedLimit;
+
+            return thighSideLimit;
+        }
+
+        return shoulderLimit;
     }
 
     // ------------------------------
@@ -630,6 +720,7 @@ public class GKMouseBoneDrag : MonoBehaviour
     void TrySelect(Vector2 mousePosition)
     {
         selectedRing = null;
+        selectedMoveHandle = null;
         draggingMoveArrow = false;
         draggingWholeBodyRotation = false;
 
@@ -825,7 +916,7 @@ public class GKMouseBoneDrag : MonoBehaviour
     }
 
     // ------------------------------
-    // 回転処理（角度制限なし）
+    // 回転処理
     // ------------------------------
 
     void RotateSelectedBone(Vector2 mousePosition)
@@ -878,16 +969,33 @@ public class GKMouseBoneDrag : MonoBehaviour
                 previousRingAngle,
                 currentRingAngle);
 
+            if (selectedRing.localAxis == Vector3.right)
+            {
+                angle = -angle;
+            }
+
             previousRingAngle = currentRingAngle;
         }
 
         angle *= rotationSensitivity;
 
-        // 角度制限を設けず、ドラッグした分だけ回転
-        selectedRing.bone.Rotate(
-            selectedWorldAxis,
-            angle,
-            Space.World);
+        float targetAngle = Mathf.Clamp(
+            selectedRing.currentAngle + angle,
+            selectedRing.minAngle,
+            selectedRing.maxAngle);
+
+        float allowedAngle =
+            targetAngle - selectedRing.currentAngle;
+
+        if (Mathf.Abs(allowedAngle) > 0.0001f)
+        {
+            selectedRing.bone.Rotate(
+                selectedWorldAxis,
+                allowedAngle,
+                Space.World);
+
+            selectedRing.currentAngle = targetAngle;
+        }
 
         previousMousePosition = mousePosition;
     }
