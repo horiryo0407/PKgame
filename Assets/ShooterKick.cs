@@ -19,11 +19,11 @@ public class ShooterKick : MonoBehaviour
             Gamepad.current.buttonSouth.wasPressedThisFrame;
 
         // キーボード：スペースキー（テスト用）
-        //bool keyboardKick =
-        //    Keyboard.current != null &&
-        //    Keyboard.current.spaceKey.wasPressedThisFrame;
+        bool keyboardKick =
+            Keyboard.current != null &&
+            Keyboard.current.spaceKey.wasPressedThisFrame;
 
-        if (gamepadKick)
+        if (gamepadKick || keyboardKick)
         {
             if (animator != null)
             {
