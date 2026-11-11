@@ -1,15 +1,11 @@
 
 using System.Collections;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class SceneTransition : MonoBehaviour
 {
-
-    [SerializeField] private ShooterCameraRig cameraRig;
-
     [Header("遷移先")]
     [SerializeField] private string nextSceneName = "GKPoseSetting";
 
@@ -35,7 +31,6 @@ public class SceneTransition : MonoBehaviour
         if (isTransitioning) return;
 
         Debug.Log("シュート後のタイマーを開始しました！");
-
         StartCoroutine(TransitionAfterShot());
     }
 
@@ -55,20 +50,18 @@ public class SceneTransition : MonoBehaviour
         else
         {
             Debug.LogError("ScoreManagerが見つかりません！");
+            yield break;
         }
 
         // 10投終了ならシーン移動しない
-        if (ScoreManager.Instance != null &&
-            ScoreManager.Instance.IsGameFinished)
+        if (ScoreManager.Instance.IsGameFinished)
         {
             Debug.Log("10投終了！試合終了です！");
             yield break;
         }
 
         Debug.Log("シーン遷移を実行します！");
-
         SceneManager.LoadScene(nextSceneName);
-        cameraRig.StartAim();
     }
 
     public void ChangeScene(string sceneName)
@@ -76,7 +69,6 @@ public class SceneTransition : MonoBehaviour
         if (isTransitioning) return;
 
         isTransitioning = true;
-
         SceneManager.LoadScene(sceneName);
     }
 }
