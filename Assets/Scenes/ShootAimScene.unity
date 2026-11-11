@@ -129,15 +129,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 054662fb7358ea04b963a5701706dff0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.0245566
+      value: -0.62
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 054662fb7358ea04b963a5701706dff0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.05004275
+      value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 054662fb7358ea04b963a5701706dff0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.4608961
+      value: 1.69
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 054662fb7358ea04b963a5701706dff0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -320,7 +320,7 @@ Transform:
   m_GameObject: {fileID: 121008900}
   serializedVersion: 2
   m_LocalRotation: {x: 0.70309377, y: 0.7087817, z: -0.055538, w: 0.014255624}
-  m_LocalPosition: {x: 1.86, y: 0.26, z: -0.2}
+  m_LocalPosition: {x: -0.51, y: 0.35, z: 0.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -681,7 +681,9 @@ MonoBehaviour:
   ball: {fileID: 121008905}
   lookTarget: {fileID: 0}
   followDistance: 3
-  followOffset: {x: 0, y: 0.5, z: -2}
+  followDelay: 1
+  followBack: 2
+  followHeight: 0.5
   smooth: 8
 --- !u!1 &366310810
 GameObject:
@@ -2276,7 +2278,7 @@ Transform:
   m_GameObject: {fileID: 1362335661}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.81, y: 1.23, z: -2.23}
+  m_LocalPosition: {x: -1.36, y: 1.23, z: -2.23}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
