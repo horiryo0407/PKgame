@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,7 +24,11 @@ public class BallShooter : MonoBehaviour
     [Header("シーン遷移")]
     [SerializeField] private SceneTransition sceneTransition;
 
+    [Header("フリーズ演出")]
+    [SerializeField] private BlackoutFreezeController blackoutFreezeController;
+
     private bool hasShot;
+    private bool aimInputLocked;
     private Vector2 aimOffset;
 
     private const string AimXKey = "ShotTarget_X";
@@ -65,10 +70,10 @@ public class BallShooter : MonoBehaviour
 
     void Update()
     {
-        if (hasShot || aimPoint == null || aimCenter == null)
+        if (hasShot || aimInputLocked ||
+            aimPoint == null || aimCenter == null)
             return;
 
-        // 照準操作
         if (allowAimControl)
         {
             Vector2 input = Vector2.zero;
@@ -106,7 +111,6 @@ public class BallShooter : MonoBehaviour
             UpdateAimPosition();
         }
 
-        // 照準位置の保存
         if (saveAimWithEnter &&
             Keyboard.current != null &&
             Keyboard.current.enterKey.wasPressedThisFrame)
@@ -116,7 +120,6 @@ public class BallShooter : MonoBehaviour
 
         if (!allowShooting) return;
 
-        // シュート入力
         bool shootPressed =
             (Gamepad.current != null &&
              Gamepad.current.buttonSouth.wasPressedThisFrame)
@@ -126,7 +129,7 @@ public class BallShooter : MonoBehaviour
 
         if (shootPressed)
         {
-            Shoot();
+            BeginShoot();
         }
     }
 
@@ -151,6 +154,28 @@ public class BallShooter : MonoBehaviour
             aimOffset.x + " Y：" + aimOffset.y);
     }
 
+    // 抽選を開始する
+    private void BeginShoot()
+    {
+        if (hasShot || aimInputLocked)
+            return;
+
+        aimInputLocked = true;
+
+        if (blackoutFreezeController != null)
+        {
+            blackoutFreezeController.TryStartFreeze(Shoot);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "BlackoutFreezeControllerが設定されていません。通常シュートします。");
+
+            Shoot();
+        }
+    }
+
+    // 実際にボールを飛ばす
     public void Shoot()
     {
         if (!allowShooting ||
@@ -158,6 +183,7 @@ public class BallShooter : MonoBehaviour
             ballRigidbody == null ||
             aimPoint == null)
         {
+            aimInputLocked = false;
             return;
         }
 
@@ -165,7 +191,10 @@ public class BallShooter : MonoBehaviour
             aimPoint.position - ballRigidbody.position;
 
         if (direction.sqrMagnitude < 0.0001f)
+        {
+            aimInputLocked = false;
             return;
+        }
 
         direction.Normalize();
 
@@ -180,7 +209,6 @@ public class BallShooter : MonoBehaviour
         ballRigidbody.linearVelocity =
             direction * shootSpeed;
 
-        // シュートした瞬間にタイマー開始
         if (sceneTransition != null)
         {
             sceneTransition.StartTransitionTimer();

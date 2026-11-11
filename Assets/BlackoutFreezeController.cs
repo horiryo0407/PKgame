@@ -1,7 +1,7 @@
 
 using UnityEngine;
 using UnityEngine.Video;
-using UnityEngine.UI;
+using System;
 using System.Collections;
 
 public class BlackoutFreezeController : MonoBehaviour
@@ -15,49 +15,79 @@ public class BlackoutFreezeController : MonoBehaviour
     public int lotteryDenominator = 8192;
 
     private bool isPlaying = false;
+    private bool videoFinished = false;
 
-    // シュート開始時に呼び出す
-    public void TryStartFreeze()
+    public void TryStartFreeze(Action onComplete)
     {
         if (isPlaying)
             return;
 
-        // 1 / 8192 の確率で当選
-        int result = Random.Range(0, lotteryDenominator);
+        int result = UnityEngine.Random.Range(
+            0, lotteryDenominator);
 
         if (result == 0)
         {
-            StartCoroutine(PlayFreezeVideo());
+            StartCoroutine(PlayFreezeVideo(onComplete));
+        }
+        else
+        {
+            // ハズレならすぐに通常シュート
+            onComplete?.Invoke();
         }
     }
 
-    private IEnumerator PlayFreezeVideo()
+    private IEnumerator PlayFreezeVideo(Action onComplete)
     {
         isPlaying = true;
 
-        // 動画表示
         blackoutVideo.SetActive(true);
 
-        // 動画を最初から再生
         videoPlayer.Stop();
-        videoPlayer.time = 0;
-        videoPlayer.Play();
+        videoPlayer.isLooping = false;
+        videoPlayer.timeUpdateMode =
+            VideoTimeUpdateMode.UnscaledGameTime;
 
-        // ゲームを停止
-        Time.timeScale = 0f;
+        // 動画の準備ができるまで待つ
+        videoPlayer.Prepare();
 
-        // 動画が終わるまで待つ
-        while (videoPlayer.isPlaying)
+        while (!videoPlayer.isPrepared)
         {
             yield return null;
         }
 
-        // ゲーム再開
-        Time.timeScale = 1f;
+        // ゲームを停止
+        float previousTimeScale = Time.timeScale;
+        Time.timeScale = 0f;
 
-        // 動画表示を消す
+        videoFinished = false;
+
+        videoPlayer.loopPointReached += OnVideoFinished;
+
+        // 動画再生
+        videoPlayer.Play();
+
+        // 動画終了まで待機
+        while (!videoFinished)
+        {
+            yield return null;
+        }
+
+        videoPlayer.loopPointReached -= OnVideoFinished;
+        videoPlayer.Stop();
+
+        // ゲーム再開
+        Time.timeScale = previousTimeScale;
+
         blackoutVideo.SetActive(false);
 
         isPlaying = false;
+
+        // シュートを実行
+        onComplete?.Invoke();
+    }
+
+    private void OnVideoFinished(VideoPlayer player)
+    {
+        videoFinished = true;
     }
 }
