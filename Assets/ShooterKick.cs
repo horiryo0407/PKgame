@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public class ShooterKick : MonoBehaviour
 {
     [SerializeField] private Animator animator;
+    [SerializeField] private ShooterCameraRig cameraRig;
 
     void Reset()
     {
@@ -28,6 +29,10 @@ public class ShooterKick : MonoBehaviour
             if (animator != null)
             {
                 animator.SetTrigger("Kick");
+            }
+            if (cameraRig != null)
+            {
+                cameraRig.StartKick();
             }
         }
     }

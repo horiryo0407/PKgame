@@ -1,11 +1,15 @@
 
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem;
 using System.Collections;
+using UnityEditor.Rendering;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class SceneTransition : MonoBehaviour
 {
+
+    [SerializeField] private ShooterCameraRig cameraRig;
+
     [Header("遷移先")]
     [SerializeField] private string nextSceneName = "GKPoseSetting";
 
@@ -64,6 +68,7 @@ public class SceneTransition : MonoBehaviour
         Debug.Log("シーン遷移を実行します！");
 
         SceneManager.LoadScene(nextSceneName);
+        cameraRig.StartAim();
     }
 
     public void ChangeScene(string sceneName)
