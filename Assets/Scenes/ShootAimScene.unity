@@ -1544,7 +1544,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackoutFreezeController
   videoPlayer: {fileID: 857665322}
   blackoutVideo: {fileID: 1309531231}
-  lotteryDenominator: 1
+  lotteryDenominator: 8192
 --- !u!328 &857665322
 VideoPlayer:
   m_ObjectHideFlags: 0
@@ -2277,7 +2277,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1309531232
 RectTransform:
   m_ObjectHideFlags: 0
