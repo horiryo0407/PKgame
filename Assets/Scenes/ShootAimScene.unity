@@ -380,6 +380,7 @@ MonoBehaviour:
   saveAimWithEnter: 1
   sceneTransition: {fileID: 1944556297}
   blackoutFreezeController: {fileID: 857665321}
+  gameSlowMotion: {fileID: 931253026}
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -1594,6 +1595,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &931253025
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 931253027}
+  - component: {fileID: 931253026}
+  m_Layer: 0
+  m_Name: GameSlowMotionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &931253026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 931253025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 859b153f44760b448be30b8d6b0a56d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameSlowMotion
+  slowMotionScale: 0.4
+  slowMotionDuration: 2.5
+--- !u!4 &931253027
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 931253025}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.01792, y: 0.9612, z: -5.61818}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1060759970
 GameObject:
   m_ObjectHideFlags: 0
@@ -2133,6 +2180,14 @@ MonoBehaviour:
   ringWidth: 0.008
   clickDistance: 14
   rotationSensitivity: 1
+  shoulderLimit: 85
+  bendLimit: 120
+  bendSideLimit: 20
+  thighLimit: 90
+  thighSideLimit: 45
+  shoulderBlueLimit: 35
+  hipRedLimit: 45
+  kneeRedLimit: 70
   playerRoot: {fileID: 1282165226}
   moveSensitivity: 0.01
   moveAreaCollider: {fileID: 0}
@@ -3390,6 +3445,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8ac476bd5c7dbb49b8d82a2857808b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
+  cameraRig: {fileID: 0}
   nextSceneName: GKPoseSetting
   transitionDelay: 8
 --- !u!4 &1944556298
@@ -3576,3 +3632,4 @@ SceneRoots:
   - {fileID: 198942673}
   - {fileID: 1362335662}
   - {fileID: 857665323}
+  - {fileID: 931253027}

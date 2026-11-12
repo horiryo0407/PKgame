@@ -27,6 +27,9 @@ public class BallShooter : MonoBehaviour
     [Header("フリーズ演出")]
     [SerializeField] private BlackoutFreezeController blackoutFreezeController;
 
+    [Header("スローモーション")]
+    [SerializeField] private GameSlowMotion gameSlowMotion;
+
     private bool hasShot;
     private bool aimInputLocked;
     private Vector2 aimOffset;
@@ -154,7 +157,6 @@ public class BallShooter : MonoBehaviour
             aimOffset.x + " Y：" + aimOffset.y);
     }
 
-    // 抽選を開始する
     private void BeginShoot()
     {
         if (hasShot || aimInputLocked)
@@ -175,7 +177,6 @@ public class BallShooter : MonoBehaviour
         }
     }
 
-    // 実際にボールを飛ばす
     public void Shoot()
     {
         if (!allowShooting ||
@@ -208,6 +209,17 @@ public class BallShooter : MonoBehaviour
 
         ballRigidbody.linearVelocity =
             direction * shootSpeed;
+
+        // シュート開始時にスローモーションを発動
+        if (gameSlowMotion != null)
+        {
+            gameSlowMotion.StartSlowMotion();
+        }
+        else
+        {
+            Debug.LogWarning(
+                "GameSlowMotionが設定されていません。");
+        }
 
         if (sceneTransition != null)
         {
