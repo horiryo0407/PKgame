@@ -3447,7 +3447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
   cameraRig: {fileID: 0}
   nextSceneName: GKPoseSetting
-  transitionDelay: 8
+  transitionDelay: 10
 --- !u!4 &1944556298
 Transform:
   m_ObjectHideFlags: 0
