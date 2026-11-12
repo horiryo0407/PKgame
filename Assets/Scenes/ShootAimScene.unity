@@ -375,9 +375,9 @@ MonoBehaviour:
   aimWidth: 0.5
   aimHeight: 0.5
   ringRadius: 0.2
-  ringWidth: 0.015
+  ringWidth: 0.1
   ringSegments: 64
-  ringColor: {r: 0, g: 0, b: 1, a: 1}
+  ringColor: {r: 1, g: 1, b: 1, a: 1}
   ringForwardOffset: -2.5
   aimCamera: {fileID: 0}
   allowAimControl: 1
