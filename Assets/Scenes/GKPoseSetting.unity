@@ -160,6 +160,7 @@ MonoBehaviour:
   loadSavedAimOnStart: 0
   saveAimWithEnter: 0
   sceneTransition: {fileID: 0}
+  blackoutFreezeController: {fileID: 0}
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -695,8 +696,8 @@ Transform:
   m_GameObject: {fileID: 440238971}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.038, y: 1.41, z: -6.52}
-  m_LocalScale: {x: 3.0665936, y: 0.8753753, z: 1}
+  m_LocalPosition: {x: -0.038, y: 1.482, z: -6.52}
+  m_LocalScale: {x: 2.2650824, y: 0.42289054, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1719,6 +1720,12 @@ MonoBehaviour:
   playerRoot: {fileID: 0}
   moveSensitivity: 0.01
   moveAreaCollider: {fileID: 0}
+  wholeBodyPivot: {fileID: 0}
+  wholeBodyRingRadius: 0.55
+  wholeBodyRingWidth: 0.012
+  wholeBodyRingClickDistance: 18
+  wholeBodyRotationSensitivity: 1
+  invertWholeBodyRotation: 0
   moveArrowLength: 0.45
   moveArrowWidth: 0.012
   moveArrowClickDistance: 18
@@ -1800,6 +1807,12 @@ MonoBehaviour:
   playerRoot: {fileID: 1504745534}
   moveSensitivity: 0.01
   moveAreaCollider: {fileID: 440238972}
+  wholeBodyPivot: {fileID: 0}
+  wholeBodyRingRadius: 0.55
+  wholeBodyRingWidth: 0.012
+  wholeBodyRingClickDistance: 18
+  wholeBodyRotationSensitivity: 1
+  invertWholeBodyRotation: 0
   moveArrowLength: 0.45
   moveArrowWidth: 0.012
   moveArrowClickDistance: 18
@@ -1825,6 +1838,34 @@ MonoBehaviour:
   rThighBend: {fileID: 1668017443}
   rShin: {fileID: 2043948256}
   loadPoseOnStart: 0
+--- !u!4 &1876020112 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: eed95865760703240b7526acd27f1db2, type: 3}
+  m_PrefabInstance: {fileID: 2051888557}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1876020114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876020107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8938648bc0af94c9342eb70d13c541, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GKGoalBoundaryConstraint
+  playerRoot: {fileID: 1876020112}
+  moveAreaCollider: {fileID: 440238972}
+  edgeMargin: 0.01
+  searchIterations: 12
+  trackedTransforms: []
+  previousPositions: []
+  previousRotations: []
+  attemptedPositions: []
+  attemptedRotations: []
+  bodyColliders: []
+  hasValidPose: 0
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2086,6 +2127,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1876020111}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1876020114}
     - targetCorrespondingSourceObject: {fileID: 2495864193595608362, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1504745535}
