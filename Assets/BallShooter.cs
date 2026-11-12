@@ -329,6 +329,12 @@ public class BallShooter : MonoBehaviour
 
         hasShot = true;
 
+        // シュートした瞬間にリングを消す
+        if (ringObject != null)
+        {
+            ringObject.gameObject.SetActive(false);
+        }
+
         ballRigidbody.useGravity = false;
         ballRigidbody.isKinematic = false;
 
