@@ -302,6 +302,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &276134453
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 276134454}
+  m_Layer: 0
+  m_Name: TurnSkinManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &276134454
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276134453}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.46697, y: 1.43819, z: -5.67375}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &281654557
 GameObject:
   m_ObjectHideFlags: 0
@@ -1843,8 +1874,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: eed95865760703240b7526acd27f1db2, type: 3}
   m_PrefabInstance: {fileID: 2051888557}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1876020114
-MonoBehaviour:
+--- !u!114 &1876020114MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1853,7 +1883,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f8938648bc0af94c9342eb70d13c541, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GKGoalBoundaryConstraint
   playerRoot: {fileID: 1876020112}
   moveAreaCollider: {fileID: 440238972}
@@ -1866,6 +1896,23 @@ MonoBehaviour:
   attemptedRotations: []
   bodyColliders: []
   hasValidPose: 0
+--- !u!114 &1876020115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876020107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 380b55a62faf16348b1542e24ea1e01f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSkin
+  targetRenderers:
+  - {fileID: 0}
+  materialIndex: 0
+  player1Material: {fileID: 2100000, guid: 7ff160d3a8559084f9be00a49ec33fa3, type: 2}
+  player2Material: {fileID: 2100000, guid: 65504f72699e8bf4d8831333a64c5459, type: 2}
 --- !u!1 &1954432020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2130,6 +2177,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1876020114}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eed95865760703240b7526acd27f1db2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1876020115}
     - targetCorrespondingSourceObject: {fileID: 2495864193595608362, guid: eed95865760703240b7526acd27f1db2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1504745535}
@@ -2208,3 +2258,4 @@ SceneRoots:
   - {fileID: 216026592}
   - {fileID: 204801625}
   - {fileID: 440238973}
+  - {fileID: 276134454}
