@@ -9,8 +9,8 @@ public class TurnSkinManager : MonoBehaviour
     public void ApplyTurn(int shooterPlayerNumber)
     {
         int keeperPlayerNumber = shooterPlayerNumber == 1 ? 2 : 1;
-        shooterSkin.Apply(shooterPlayerNumber);
-        keeperSkin.Apply(keeperPlayerNumber);
+        if (shooterSkin != null) shooterSkin.Apply(shooterPlayerNumber);
+        if (keeperSkin != null) keeperSkin.Apply(keeperPlayerNumber);
     }
 
     [ContextMenu("Test Shooter=1P")]
