@@ -155,6 +155,12 @@ MonoBehaviour:
   aimMoveSpeed: 0.5
   aimWidth: 0.5
   aimHeight: 0.5
+  ringRadius: 0.2
+  ringWidth: 0.015
+  ringSegments: 96
+  ringColor: {r: 0, g: 1, b: 1, a: 1}
+  ringForwardOffset: 0.3
+  aimCamera: {fileID: 0}
   allowAimControl: 1
   allowShooting: 1
   loadSavedAimOnStart: 0
@@ -205,7 +211,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1f5a9919f602864794fdfeb43352e1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKPositionTimer
-  limitTime: 10
+  limitTime: 15
   timerText: {fileID: 933580747}
   poseSave: {fileID: 1876020111}
 --- !u!4 &204801625
@@ -1130,7 +1136,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 254, y: 198.8}
+  m_AnchoredPosition: {x: 0, y: 197.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1064539487 stripped
