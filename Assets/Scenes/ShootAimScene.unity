@@ -374,13 +374,18 @@ MonoBehaviour:
   aimMoveSpeed: 0.5
   aimWidth: 0.5
   aimHeight: 0.5
+  ringRadius: 0.2
+  ringWidth: 0.1
+  ringSegments: 64
+  ringColor: {r: 1, g: 1, b: 1, a: 1}
+  ringForwardOffset: -2.5
+  aimCamera: {fileID: 0}
   allowAimControl: 1
   allowShooting: 1
   loadSavedAimOnStart: 0
   saveAimWithEnter: 1
   sceneTransition: {fileID: 1944556297}
   blackoutFreezeController: {fileID: 857665321}
-  gameSlowMotion: {fileID: 931253026}
 --- !u!4 &127302669
 Transform:
   m_ObjectHideFlags: 0
@@ -1229,7 +1234,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -1240,7 +1245,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 615810269}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -3447,7 +3452,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
   cameraRig: {fileID: 0}
   nextSceneName: GKPoseSetting
-  transitionDelay: 8
+  transitionDelay: 10
 --- !u!4 &1944556298
 Transform:
   m_ObjectHideFlags: 0
