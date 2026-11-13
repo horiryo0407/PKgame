@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/TitlScene.unity
+    guid: e67ac91b8bb17d2489134dcfe07bb146
+  - enabled: 1
     path: Assets/Scenes/GKPoseSetting.unity
     guid: 9b7e15c673ec6504da03919bc7210c6d
   - enabled: 1
