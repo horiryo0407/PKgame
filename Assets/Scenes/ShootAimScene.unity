@@ -2144,7 +2144,8 @@ MonoBehaviour:
   lShin: {fileID: 1994612334}
   rThighBend: {fileID: 1735781179}
   rShin: {fileID: 480966973}
-  moveDuration: 2
+  moveDuration: 3
+  startDelay: 1.5
 --- !u!114 &1191704606
 MonoBehaviour:
   m_ObjectHideFlags: 0

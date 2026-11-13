@@ -19,21 +19,21 @@ public class GKPoseOnSpace : MonoBehaviour
     [Header("動きの設定")]
     public float moveDuration = 0.5f;
 
+    [Header("動き始めるまでの待ち時間")]
+    public float startDelay = 0.3f;
+
     private const string Prefix = "GKPose_";
     private bool poseApplied = false;
-
 
     void Update()
     {
         if (poseApplied)
             return;
 
-        // キーボード：スペースキー
         bool keyboardPressed =
             Keyboard.current != null &&
             Keyboard.current.spaceKey.wasPressedThisFrame;
 
-        // ゲームパッド：Aボタン / PlayStationの×ボタン
         bool gamepadPressed =
             Gamepad.current != null &&
             Gamepad.current.buttonSouth.wasPressedThisFrame;
@@ -54,10 +54,15 @@ public class GKPoseOnSpace : MonoBehaviour
         }
     }
 
-
     IEnumerator MoveToSavedPose()
     {
         poseApplied = true;
+
+        // 指定した時間だけ待つ
+        if (startDelay > 0f)
+        {
+            yield return new WaitForSeconds(startDelay);
+        }
 
         Vector3 startPosition = transform.position;
 
@@ -91,12 +96,10 @@ public class GKPoseOnSpace : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / duration);
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
-            // GK本体の位置
             transform.position = Vector3.Lerp(
                 startPosition, targetPosition, smoothT
             );
 
-            // hipの位置
             if (hip != null &&
                 PlayerPrefs.HasKey(Prefix + "HipPos_x"))
             {
@@ -105,7 +108,6 @@ public class GKPoseOnSpace : MonoBehaviour
                 );
             }
 
-            // 関節の回転
             for (int i = 0; i < bones.Length; i++)
             {
                 if (bones[i] != null)
@@ -121,7 +123,6 @@ public class GKPoseOnSpace : MonoBehaviour
             yield return null;
         }
 
-        // 最後に保存した値へ正確に合わせる
         transform.position = targetPosition;
 
         if (hip != null &&
