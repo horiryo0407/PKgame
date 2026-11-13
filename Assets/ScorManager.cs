@@ -92,6 +92,13 @@ public class ScoreManager : MonoBehaviour
         resultText = resultObject != null
             ? resultObject.GetComponent<TMP_Text>()
             : null;
+
+        // 試合終了までは非表示
+        if (resultText != null)
+        {
+            resultText.text = "";
+            resultText.enabled = false;
+        }
     }
 
     // 得点加算
@@ -174,6 +181,9 @@ public class ScoreManager : MonoBehaviour
             return;
         }
 
+        // 結果を表示
+        resultText.enabled = true;
+
         if (winner == 0)
         {
             resultText.text = "プレイヤー1の勝利！";
@@ -218,6 +228,7 @@ public class ScoreManager : MonoBehaviour
         if (resultText != null)
         {
             resultText.text = "";
+            resultText.enabled = false;
         }
 
         UpdateScoreText();
