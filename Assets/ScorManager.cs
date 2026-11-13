@@ -13,18 +13,18 @@ public class ScoreManager : MonoBehaviour
     [Header("ターン表示")]
     [SerializeField] private TMP_Text turnText;
 
+    [Header("勝敗結果表示")]
+    [SerializeField] private TMP_Text resultText;
+
     [Header("文字サイズ")]
     [SerializeField] private float fontSize = 18f;
 
-    // プレイヤーごとの得点
     private int player1Score = 0;
     private int player2Score = 0;
 
-    // プレイヤーごとのシュート回数
     private int player1Shots = 0;
     private int player2Shots = 0;
 
-    // 全体のシュート回数
     private int totalShots = 0;
 
     private const int MaxShots = 10;
@@ -32,9 +32,12 @@ public class ScoreManager : MonoBehaviour
     public int TotalShots => totalShots;
     public bool IsGameFinished => totalShots >= MaxShots;
 
+    // 勝者：0 = プレイヤー1、1 = プレイヤー2、-1 = 引き分け
+    private int winner = -2;
+    public int Winner => winner;
+
     private void Awake()
     {
-        // ScoreManagerの重複防止
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -42,8 +45,6 @@ public class ScoreManager : MonoBehaviour
         }
 
         Instance = this;
-
-        // シーン移動後もScoreManagerを残す
         DontDestroyOnLoad(gameObject);
 
         FindTextObjects();
@@ -68,18 +69,17 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
-    // シーン移動後に呼び出される
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         FindTextObjects();
         UpdateScoreText();
     }
 
-    // 新しいシーンのTextを取得
     private void FindTextObjects()
     {
         GameObject scoreObject = GameObject.Find("ScoreText");
         GameObject turnObject = GameObject.Find("TurnText");
+        GameObject resultObject = GameObject.Find("ResultText");
 
         scoreText = scoreObject != null
             ? scoreObject.GetComponent<TMP_Text>()
@@ -87,6 +87,10 @@ public class ScoreManager : MonoBehaviour
 
         turnText = turnObject != null
             ? turnObject.GetComponent<TMP_Text>()
+            : null;
+
+        resultText = resultObject != null
+            ? resultObject.GetComponent<TMP_Text>()
             : null;
     }
 
@@ -111,13 +115,12 @@ public class ScoreManager : MonoBehaviour
         UpdateScoreText();
     }
 
-    // 1回のシュート終了時に呼び出す
+    // シュート終了
     public void CompleteShot(int shotPlayer)
     {
         if (IsGameFinished)
             return;
 
-        // 今回シュートしたプレイヤーの回数を増やす
         if (shotPlayer == 0)
             player1Shots++;
         else
@@ -129,28 +132,72 @@ public class ScoreManager : MonoBehaviour
 
         if (IsGameFinished)
         {
-            Debug.Log("試合終了！");
-            ShowFinalResult();
+            JudgeWinner();
         }
 
         UpdateScoreText();
     }
 
-    // 以前の引数なし呼び出しにも対応
     public void CompleteShot()
     {
         CompleteShot(SceneTransition.CurrentPlayer);
     }
 
-    // 最終結果
-    private void ShowFinalResult()
+    // 勝敗判定
+    private void JudgeWinner()
     {
         if (player1Score > player2Score)
+        {
+            winner = 0;
             Debug.Log("プレイヤー1の勝利！");
+        }
         else if (player2Score > player1Score)
+        {
+            winner = 1;
             Debug.Log("プレイヤー2の勝利！");
+        }
         else
+        {
+            winner = -1;
             Debug.Log("引き分け！");
+        }
+
+        ShowFinalResult();
+    }
+
+    // 最終結果表示
+    private void ShowFinalResult()
+    {
+        if (resultText == null)
+        {
+            Debug.LogWarning("ResultTextが見つかりません。");
+            return;
+        }
+
+        if (winner == 0)
+        {
+            resultText.text = "プレイヤー1の勝利！";
+        }
+        else if (winner == 1)
+        {
+            resultText.text = "プレイヤー2の勝利！";
+        }
+        else
+        {
+            resultText.text = "引き分け！";
+        }
+
+        resultText.text +=
+            "\n\n最終スコア\n" +
+            "プレイヤー1：" + player1Score + "点\n" +
+            "プレイヤー2：" + player2Score + "点";
+    }
+
+    // 勝者を取得
+    // 戻り値：0 = プレイヤー1、1 = プレイヤー2、-1 = 引き分け、-2 = 未判定
+    public int GetWinner()
+    {
+        return winner;
     }
 
     // スコアリセット
@@ -164,13 +211,18 @@ public class ScoreManager : MonoBehaviour
 
         totalShots = 0;
 
-        // ターンもプレイヤー1に戻す
+        winner = -2;
+
         SceneTransition.ResetTurn();
+
+        if (resultText != null)
+        {
+            resultText.text = "";
+        }
 
         UpdateScoreText();
     }
 
-    // 外部から表示を更新する
     public void RefreshDisplay()
     {
         UpdateScoreText();
@@ -186,7 +238,6 @@ public class ScoreManager : MonoBehaviour
             scoreText.text =
                 "プレイヤー1：" + player1Score +
                 "点 (" + player1Shots + "/5)\n" +
-
                 "プレイヤー2：" + player2Score +
                 "点 (" + player2Shots + "/5)";
         }
