@@ -5,36 +5,50 @@ public class MeshInfoChecker : MonoBehaviour
 {
     public SkinnedMeshRenderer target;
 
-    [ContextMenu("メッシュ情報を確認")]
-    public void CheckMesh()
+    [ContextMenu("頭の頂点数を確認")]
+    public void CheckHead()
     {
-        if (target == null)
+        if (target == null || target.sharedMesh == null)
         {
-            Debug.LogError("TargetにSkinnedMeshRendererを設定してください！");
+            Debug.LogError("Targetが設定されていません！");
             return;
         }
 
         Mesh mesh = target.sharedMesh;
+        Transform[] bones = target.bones;
+        BoneWeight[] weights = mesh.boneWeights;
 
-        if (mesh == null)
+        int headIndex = -1;
+
+        for (int i = 0; i < bones.Length; i++)
         {
-            Debug.LogError("メッシュが見つかりません！");
+            if (bones[i] != null && bones[i].name == "head")
+            {
+                headIndex = i;
+                break;
+            }
+        }
+
+        if (headIndex == -1)
+        {
+            Debug.LogError("headボーンが見つかりません！");
             return;
         }
 
-        Debug.Log("===== メッシュ情報 =====");
-        Debug.Log("メッシュ名：" + mesh.name);
-        Debug.Log("頂点数：" + mesh.vertexCount);
-        Debug.Log("SubMesh数：" + mesh.subMeshCount);
-        Debug.Log("ボーン数：" + target.bones.Length);
-        Debug.Log("BindPose数：" + mesh.bindposes.Length);
+        int headVertices = 0;
 
-        foreach (Transform bone in target.bones)
+        foreach (BoneWeight weight in weights)
         {
-            if (bone != null)
-                Debug.Log("ボーン：" + bone.name);
+            if (weight.boneIndex0 == headIndex && weight.weight0 > 0.5f ||
+                weight.boneIndex1 == headIndex && weight.weight1 > 0.5f ||
+                weight.boneIndex2 == headIndex && weight.weight2 > 0.5f ||
+                weight.boneIndex3 == headIndex && weight.weight3 > 0.5f)
+            {
+                headVertices++;
+            }
         }
 
-        Debug.Log("===== 確認終了 =====");
+        Debug.Log("頭に強く割り当てられた頂点数：" + headVertices);
+        Debug.Log("メッシュ全体の頂点数：" + mesh.vertexCount);
     }
 }
