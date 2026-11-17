@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class GKPositionTimer : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class GKPositionTimer : MonoBehaviour
 
     [Header("時間表示")]
     public TMP_Text timerText;
+    public Image timerGauge;
 
     [Header("GKポーズ保存")]
     public GKBonePoseSave poseSave;
@@ -62,8 +64,13 @@ public class GKPositionTimer : MonoBehaviour
     {
         if (timerText != null)
         {
-            timerText.text =
-                "残り：" + Mathf.CeilToInt(remainingTime) + "秒";
+            timerText.text = Mathf.CeilToInt(remainingTime).ToString();
         }
+
+        if (timerGauge != null)
+        {
+            timerGauge.fillAmount = remainingTime / limitTime;
+        }
+        timerGauge.color = remainingTime <= 3f ? Color.red : Color.white;
     }
 }
