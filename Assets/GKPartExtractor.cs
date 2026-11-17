@@ -1,23 +1,100 @@
 
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Rendering;
 
 public class GKPartExtractor : MonoBehaviour
 {
+    [Header("頭を切り出す対象")]
     public SkinnedMeshRenderer target;
+
+    [Header("赤線で表示する閉じた輪郭番号")]
+    public int showContourNumber = 1;
+
+    private List<int> debugContour = new List<int>();
+
+    private struct Edge
+    {
+        public int a;
+        public int b;
+
+        public Edge(int v1, int v2)
+        {
+            a = Mathf.Min(v1, v2);
+            b = Mathf.Max(v1, v2);
+        }
+
+        public override int GetHashCode()
+        {
+            return a * 397 ^ b;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Edge)) return false;
+
+            Edge other = (Edge)obj;
+            return a == other.a && b == other.b;
+        }
+    }
+
+    private struct PositionKey
+    {
+        public int x;
+        public int y;
+        public int z;
+
+        public PositionKey(Vector3 p)
+        {
+            x = Mathf.RoundToInt(p.x * 10000f);
+            y = Mathf.RoundToInt(p.y * 10000f);
+            z = Mathf.RoundToInt(p.z * 10000f);
+        }
+
+        public override int GetHashCode()
+        {
+            return (x * 73856093) ^
+                   (y * 19349663) ^
+                   (z * 83492791);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is PositionKey)) return false;
+
+            PositionKey other = (PositionKey)obj;
+
+            return x == other.x &&
+                   y == other.y &&
+                   z == other.z;
+        }
+    }
 
     [ContextMenu("頭メッシュを切り出す")]
     public void ExtractHead()
     {
-        if (target == null || target.sharedMesh == null)
+        if (target == null)
         {
-            Debug.LogError("Targetが設定されていません！");
+            Debug.LogError("Target が設定されていません！");
             return;
         }
 
         Mesh source = target.sharedMesh;
-        BoneWeight[] weights = source.boneWeights;
+
+        if (source == null)
+        {
+            Debug.LogError("Target に Mesh がありません！");
+            return;
+        }
+
         Transform[] bones = target.bones;
+        BoneWeight[] weights = source.boneWeights;
+
+        if (weights == null || weights.Length != source.vertexCount)
+        {
+            Debug.LogError("ボーンウェイトが取得できません！");
+            return;
+        }
 
         int headIndex = -1;
 
@@ -30,45 +107,54 @@ public class GKPartExtractor : MonoBehaviour
             }
         }
 
-        if (headIndex < 0)
+        if (headIndex == -1)
         {
-            Debug.LogError("headボーンが見つかりません！");
+            Debug.LogError("head ボーンが見つかりません！");
             return;
         }
 
-        HashSet<int> headBoneIndices = new HashSet<int>();
+        bool[] headBones = new bool[bones.Length];
 
         for (int i = 0; i < bones.Length; i++)
         {
-            if (bones[i] != null &&
-                (bones[i] == bones[headIndex] ||
-                 bones[i].IsChildOf(bones[headIndex])))
+            if (bones[i] == null) continue;
+
+            Transform current = bones[i];
+
+            while (current != null)
             {
-                headBoneIndices.Add(i);
+                if (current == bones[headIndex])
+                {
+                    headBones[i] = true;
+                    break;
+                }
+
+                current = current.parent;
             }
         }
 
-        List<Vector3> vertices = new List<Vector3>();
-        List<Vector3> normals = new List<Vector3>();
-        List<Vector2> uv = new List<Vector2>();
+        Vector3[] vertices = source.vertices;
+        Vector3[] normals = source.normals;
+        Vector2[] uv = source.uv;
+        Color[] colors = source.colors;
 
-        List<int>[] subTriangles =
-            new List<int>[source.subMeshCount];
+        List<Vector3> newVertices = new List<Vector3>();
+        List<Vector3> newNormals = new List<Vector3>();
+        List<Vector2> newUV = new List<Vector2>();
+        List<Color> newColors = new List<Color>();
 
         Dictionary<int, int> vertexMap =
             new Dictionary<int, int>();
 
-        for (int i = 0; i < subTriangles.Length; i++)
-        {
-            subTriangles[i] = new List<int>();
-        }
+        List<List<int>> subMeshes =
+            new List<List<int>>();
 
-        for (int sub = 0; sub < source.subMeshCount; sub++)
-        {
-            if (source.GetTopology(sub) != MeshTopology.Triangles)
-                continue;
+        int triangleCount = 0;
 
-            int[] triangles = source.GetTriangles(sub);
+        for (int s = 0; s < source.subMeshCount; s++)
+        {
+            int[] triangles = source.GetTriangles(s);
+            List<int> newTriangles = new List<int>();
 
             for (int i = 0; i < triangles.Length; i += 3)
             {
@@ -76,171 +162,466 @@ public class GKPartExtractor : MonoBehaviour
                 int b = triangles[i + 1];
                 int c = triangles[i + 2];
 
-                if (!IsHead(weights[a], headBoneIndices) ||
-                    !IsHead(weights[b], headBoneIndices) ||
-                    !IsHead(weights[c], headBoneIndices))
+                if (!IsHeadVertex(a, weights, headBones) ||
+                    !IsHeadVertex(b, weights, headBones) ||
+                    !IsHeadVertex(c, weights, headBones))
+                {
                     continue;
+                }
 
-                AddVertex(a, source, vertices, normals, uv,
-                    vertexMap, subTriangles[sub]);
+                int[] originalIndices = { a, b, c };
 
-                AddVertex(b, source, vertices, normals, uv,
-                    vertexMap, subTriangles[sub]);
+                for (int j = 0; j < 3; j++)
+                {
+                    int originalIndex = originalIndices[j];
 
-                AddVertex(c, source, vertices, normals, uv,
-                    vertexMap, subTriangles[sub]);
+                    if (!vertexMap.ContainsKey(originalIndex))
+                    {
+                        int newIndex = newVertices.Count;
+                        vertexMap.Add(originalIndex, newIndex);
+
+                        newVertices.Add(vertices[originalIndex]);
+
+                        if (normals.Length == vertices.Length)
+                            newNormals.Add(normals[originalIndex]);
+
+                        if (uv.Length == vertices.Length)
+                            newUV.Add(uv[originalIndex]);
+
+                        if (colors.Length == vertices.Length)
+                            newColors.Add(colors[originalIndex]);
+                    }
+
+                    newTriangles.Add(vertexMap[originalIndex]);
+                }
+
+                triangleCount++;
             }
+
+            subMeshes.Add(newTriangles);
         }
 
-        int triangleCount = 0;
-
-        foreach (var list in subTriangles)
-            triangleCount += list.Count / 3;
-
-        Debug.Log("頭の三角形数：" + triangleCount);
-
-        if (triangleCount == 0)
+        if (newVertices.Count == 0)
         {
-            Debug.LogWarning("頭の三角形が見つかりませんでした。");
+            Debug.LogError("頭のメッシュが見つかりませんでした！");
             return;
         }
 
+        Transform old = target.transform.Find("HeadMesh_Test");
+
+        if (old != null)
+            DestroyImmediate(old.gameObject);
+
         Mesh result = new Mesh();
-        result.name = "ExtractedHead_Test";
-        result.indexFormat = source.indexFormat;
-        result.SetVertices(vertices);
+        result.name = "ExtractedHead";
 
-        if (normals.Count == vertices.Count)
-            result.SetNormals(normals);
+        if (newVertices.Count > 65535)
+            result.indexFormat = IndexFormat.UInt32;
 
-        if (uv.Count == vertices.Count)
-            result.SetUVs(0, uv);
+        result.SetVertices(newVertices);
+        result.subMeshCount = subMeshes.Count;
 
-        result.subMeshCount = source.subMeshCount;
+        for (int s = 0; s < subMeshes.Count; s++)
+            result.SetTriangles(subMeshes[s], s);
 
-        for (int i = 0; i < subTriangles.Length; i++)
-            result.SetTriangles(subTriangles[i], i);
+        if (newNormals.Count == newVertices.Count)
+            result.SetNormals(newNormals);
+        else
+            result.RecalculateNormals();
+
+        if (newUV.Count == newVertices.Count)
+            result.SetUVs(0, newUV);
+
+        if (newColors.Count == newVertices.Count)
+            result.SetColors(newColors);
 
         result.RecalculateBounds();
 
-        // 境界の辺を調べる
+        GameObject preview = new GameObject("HeadMesh_Test");
+
+        preview.transform.SetParent(target.transform, false);
+        preview.transform.localPosition = Vector3.zero;
+        preview.transform.localRotation = Quaternion.identity;
+        preview.transform.localScale = Vector3.one;
+
+        MeshFilter filter = preview.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = preview.AddComponent<MeshRenderer>();
+
+        filter.sharedMesh = result;
+        meshRenderer.sharedMaterials = target.sharedMaterials;
+
+        Debug.Log("頭メッシュ切り出し完了！");
+        Debug.Log("切り出した頂点数：" + newVertices.Count);
+        Debug.Log("切り出した三角形数：" + triangleCount);
+
+        List<List<int>> loops = FindOrderedContours(result);
+
+        if (loops.Count > 0)
+        {
+            CapLowestContour(result, loops[0]);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "閉じた輪郭が見つからなかったため、穴をふさげませんでした。"
+            );
+        }
+    }
+
+    private bool IsHeadVertex(
+        int index,
+        BoneWeight[] weights,
+        bool[] headBones)
+    {
+        BoneWeight w = weights[index];
+
+        return
+            IsHeadWeight(w.boneIndex0, w.weight0, headBones) ||
+            IsHeadWeight(w.boneIndex1, w.weight1, headBones) ||
+            IsHeadWeight(w.boneIndex2, w.weight2, headBones) ||
+            IsHeadWeight(w.boneIndex3, w.weight3, headBones);
+    }
+
+    private bool IsHeadWeight(
+        int boneIndex,
+        float weight,
+        bool[] headBones)
+    {
+        return weight > 0.02f &&
+               boneIndex >= 0 &&
+               boneIndex < headBones.Length &&
+               headBones[boneIndex];
+    }
+
+    private List<List<int>> FindOrderedContours(Mesh mesh)
+    {
+        Vector3[] vertices = mesh.vertices;
+
+        Dictionary<PositionKey, int> positionMap =
+            new Dictionary<PositionKey, int>();
+
+        List<int> representative = new List<int>();
+        int[] welded = new int[vertices.Length];
+
+        // 同じ位置の頂点をまとめる
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            PositionKey key = new PositionKey(vertices[i]);
+
+            if (!positionMap.TryGetValue(key, out int id))
+            {
+                id = representative.Count;
+                positionMap.Add(key, id);
+                representative.Add(i);
+            }
+
+            welded[i] = id;
+        }
+
         Dictionary<Edge, int> edgeCounts =
             new Dictionary<Edge, int>();
 
-        foreach (var triangles in subTriangles)
+        for (int s = 0; s < mesh.subMeshCount; s++)
         {
-            for (int i = 0; i < triangles.Count; i += 3)
+            int[] triangles = mesh.GetTriangles(s);
+
+            for (int i = 0; i < triangles.Length; i += 3)
             {
-                AddEdge(edgeCounts, triangles[i], triangles[i + 1]);
-                AddEdge(edgeCounts, triangles[i + 1], triangles[i + 2]);
-                AddEdge(edgeCounts, triangles[i + 2], triangles[i]);
+                int a = welded[triangles[i]];
+                int b = welded[triangles[i + 1]];
+                int c = welded[triangles[i + 2]];
+
+                AddEdge(edgeCounts, a, b);
+                AddEdge(edgeCounts, b, c);
+                AddEdge(edgeCounts, c, a);
             }
         }
+
+        Dictionary<int, List<int>> adjacency =
+            new Dictionary<int, List<int>>();
 
         int boundaryCount = 0;
 
         foreach (var pair in edgeCounts)
         {
-            if (pair.Value == 1)
-                boundaryCount++;
+            if (pair.Value != 1) continue;
+
+            boundaryCount++;
+
+            AddNeighbor(adjacency, pair.Key.a, pair.Key.b);
+            AddNeighbor(adjacency, pair.Key.b, pair.Key.a);
         }
 
-        Debug.Log("切り口などの境界辺の数：" + boundaryCount);
+        Debug.Log("位置を統合した後の境界辺数：" + boundaryCount);
 
-        GameObject preview = new GameObject("HeadMesh_Test");
-        preview.transform.SetParent(transform, false);
+        HashSet<int> visited = new HashSet<int>();
+        List<List<int>> loops = new List<List<int>>();
 
-        MeshFilter filter = preview.AddComponent<MeshFilter>();
-        filter.sharedMesh = result;
+        foreach (var pair in adjacency)
+        {
+            int start = pair.Key;
 
-        MeshRenderer renderer =
-            preview.AddComponent<MeshRenderer>();
+            if (visited.Contains(start))
+                continue;
 
-        renderer.sharedMaterials = target.sharedMaterials;
+            Queue<int> queue = new Queue<int>();
+            List<int> component = new List<int>();
 
-        Debug.Log("頭メッシュ切り出し成功！");
-        Debug.Log("頂点数：" + result.vertexCount);
-        Debug.Log("頭メッシュの下端Y：" + result.bounds.min.y);
-        Debug.Log("頭メッシュの上端Y：" + result.bounds.max.y);
+            queue.Enqueue(start);
+            visited.Add(start);
+
+            while (queue.Count > 0)
+            {
+                int current = queue.Dequeue();
+                component.Add(current);
+
+                foreach (int next in adjacency[current])
+                {
+                    if (visited.Contains(next))
+                        continue;
+
+                    visited.Add(next);
+                    queue.Enqueue(next);
+                }
+            }
+
+            bool simple = true;
+
+            foreach (int v in component)
+            {
+                if (adjacency[v].Count != 2)
+                {
+                    simple = false;
+                    break;
+                }
+            }
+
+            if (!simple) continue;
+
+            List<int> loop = new List<int>();
+            int previous = -1;
+            int currentVertex = start;
+            bool closed = false;
+
+            for (int i = 0; i <= component.Count; i++)
+            {
+                if (loop.Contains(representative[currentVertex]))
+                    break;
+
+                loop.Add(representative[currentVertex]);
+
+                List<int> neighbors = adjacency[currentVertex];
+
+                int next =
+                    neighbors[0] != previous
+                    ? neighbors[0]
+                    : neighbors[1];
+
+                if (next == start)
+                {
+                    closed = true;
+                    break;
+                }
+
+                previous = currentVertex;
+                currentVertex = next;
+            }
+
+            if (closed &&
+                loop.Count == component.Count &&
+                loop.Count >= 8)
+            {
+                loops.Add(loop);
+            }
+        }
+
+        // 平均Yが低い輪郭から並べる
+        loops.Sort((a, b) =>
+        {
+            float yA = 0f;
+            float yB = 0f;
+
+            foreach (int i in a)
+                yA += vertices[i].y;
+
+            foreach (int i in b)
+                yB += vertices[i].y;
+
+            yA /= a.Count;
+            yB /= b.Count;
+
+            return yA.CompareTo(yB);
+        });
+
+        Debug.Log("統合後に検出した閉じた輪郭数：" + loops.Count);
+
+        for (int i = 0; i < loops.Count; i++)
+        {
+            Vector3 center = Vector3.zero;
+
+            foreach (int index in loops[i])
+                center += vertices[index];
+
+            center /= loops[i].Count;
+
+            Debug.Log(
+                "輪郭 " + (i + 1) +
+                " / 頂点数：" + loops[i].Count +
+                " / 中心：" + center
+            );
+        }
+
+        debugContour.Clear();
+
+        int selected = showContourNumber - 1;
+
+        if (selected >= 0 && selected < loops.Count)
+            debugContour.AddRange(loops[selected]);
+
+        return loops;
     }
 
-    private struct Edge
+    private void CapLowestContour(Mesh mesh, List<int> loop)
     {
-        public int a;
-        public int b;
+        if (loop == null || loop.Count < 3)
+            return;
 
-        public Edge(int x, int y)
+        List<Vector3> vertices =
+            new List<Vector3>(mesh.vertices);
+
+        List<Vector2> uv =
+            new List<Vector2>(mesh.uv);
+
+        List<Color> colors =
+            new List<Color>(mesh.colors);
+
+        bool hasUV = uv.Count == vertices.Count;
+        bool hasColors = colors.Count == vertices.Count;
+
+        Vector3 center = Vector3.zero;
+        Vector2 uvCenter = Vector2.zero;
+        Color colorCenter = Color.clear;
+
+        foreach (int index in loop)
         {
-            a = Mathf.Min(x, y);
-            b = Mathf.Max(x, y);
+            center += vertices[index];
+
+            if (hasUV)
+                uvCenter += uv[index];
+
+            if (hasColors)
+                colorCenter += colors[index];
         }
 
-        public override int GetHashCode()
+        center /= loop.Count;
+
+        if (hasUV)
+            uvCenter /= loop.Count;
+
+        if (hasColors)
+            colorCenter /= loop.Count;
+
+        int centerIndex = vertices.Count;
+        vertices.Add(center);
+
+        if (hasUV)
+            uv.Add(uvCenter);
+
+        if (hasColors)
+            colors.Add(colorCenter);
+
+        // 首の輪郭を中心点から三角形でふさぐ
+        List<int> triangles =
+            new List<int>(mesh.GetTriangles(0));
+
+        for (int i = 0; i < loop.Count; i++)
         {
-            return a * 397 ^ b;
+            int current = loop[i];
+            int next = loop[(i + 1) % loop.Count];
+
+            triangles.Add(centerIndex);
+            triangles.Add(next);
+            triangles.Add(current);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Edge))
-                return false;
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
 
-            Edge other = (Edge)obj;
-            return a == other.a && b == other.b;
-        }
+        if (hasUV)
+            mesh.SetUVs(0, uv);
+
+        if (hasColors)
+            mesh.SetColors(colors);
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        Debug.Log(
+            "統合した境界をふさぎました。頂点数：" +
+            loop.Count
+        );
     }
 
     private void AddEdge(
-        Dictionary<Edge, int> edges,
+        Dictionary<Edge, int> counts,
         int a,
         int b)
     {
         Edge edge = new Edge(a, b);
 
-        if (edges.ContainsKey(edge))
-            edges[edge]++;
+        if (counts.ContainsKey(edge))
+            counts[edge]++;
         else
-            edges.Add(edge, 1);
+            counts.Add(edge, 1);
     }
 
-    private void AddVertex(
-        int oldIndex,
-        Mesh source,
-        List<Vector3> vertices,
-        List<Vector3> normals,
-        List<Vector2> uv,
-        Dictionary<int, int> vertexMap,
-        List<int> triangles)
+    private void AddNeighbor(
+        Dictionary<int, List<int>> adjacency,
+        int a,
+        int b)
     {
-        if (!vertexMap.TryGetValue(oldIndex, out int newIndex))
+        if (!adjacency.ContainsKey(a))
+            adjacency.Add(a, new List<int>());
+
+        adjacency[a].Add(b);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (target == null ||
+            debugContour == null ||
+            debugContour.Count < 2)
+            return;
+
+        Transform preview =
+            target.transform.Find("HeadMesh_Test");
+
+        if (preview == null) return;
+
+        MeshFilter filter =
+            preview.GetComponent<MeshFilter>();
+
+        if (filter == null || filter.sharedMesh == null)
+            return;
+
+        Vector3[] vertices = filter.sharedMesh.vertices;
+
+        Gizmos.color = Color.red;
+
+        for (int i = 0; i < debugContour.Count; i++)
         {
-            newIndex = vertices.Count;
-            vertexMap.Add(oldIndex, newIndex);
+            Vector3 current =
+                preview.TransformPoint(vertices[debugContour[i]]);
 
-            vertices.Add(source.vertices[oldIndex]);
+            Vector3 next =
+                preview.TransformPoint(
+                    vertices[
+                        debugContour[(i + 1) % debugContour.Count]
+                    ]
+                );
 
-            if (source.normals.Length > oldIndex)
-                normals.Add(source.normals[oldIndex]);
-
-            if (source.uv.Length > oldIndex)
-                uv.Add(source.uv[oldIndex]);
+            Gizmos.DrawLine(current, next);
+            Gizmos.DrawSphere(current, 0.008f);
         }
-
-        triangles.Add(newIndex);
-    }
-
-    private bool IsHead(
-        BoneWeight weight,
-        HashSet<int> headBoneIndices)
-    {
-        return
-            (headBoneIndices.Contains(weight.boneIndex0) &&
-             weight.weight0 > 0.05f) ||
-            (headBoneIndices.Contains(weight.boneIndex1) &&
-             weight.weight1 > 0.05f) ||
-            (headBoneIndices.Contains(weight.boneIndex2) &&
-             weight.weight2 > 0.05f) ||
-            (headBoneIndices.Contains(weight.boneIndex3) &&
-             weight.weight3 > 0.05f);
     }
 }
