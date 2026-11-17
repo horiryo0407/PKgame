@@ -5,10 +5,10 @@ using UnityEngine.Rendering;
 
 public class GKPartExtractor : MonoBehaviour
 {
-    [Header("頭を切り出す対象")]
+    [Header("切り出す対象")]
     public SkinnedMeshRenderer target;
 
-    [Header("赤線で表示する閉じた輪郭番号")]
+    [Header("赤線で表示する頭の輪郭番号")]
     public int showContourNumber = 1;
 
     private List<int> debugContour = new List<int>();
@@ -70,8 +70,8 @@ public class GKPartExtractor : MonoBehaviour
         }
     }
 
-    [ContextMenu("頭メッシュを切り出す")]
-    public void ExtractHead()
+    [ContextMenu("頭と胴体を切り出す")]
+    public void ExtractHeadAndBody()
     {
         if (target == null)
         {
@@ -113,6 +113,7 @@ public class GKPartExtractor : MonoBehaviour
             return;
         }
 
+        // headボーンと、その子孫ボーンを調べる
         bool[] headBones = new bool[bones.Length];
 
         for (int i = 0; i < bones.Length; i++)
@@ -133,6 +134,65 @@ public class GKPartExtractor : MonoBehaviour
             }
         }
 
+        // 頭と胴体のメッシュをそれぞれ作る
+        Mesh headMesh = CreatePartMesh(
+            source, weights, headBones, true);
+
+        Mesh bodyMesh = CreatePartMesh(
+            source, weights, headBones, false);
+
+        if (headMesh == null || bodyMesh == null)
+        {
+            Debug.LogError("頭または胴体のメッシュ作成に失敗しました！");
+            return;
+        }
+
+        // 前回作ったプレビューを削除
+        DeletePreview("HeadMesh_Test");
+        DeletePreview("BodyMesh_Test");
+
+        // 頭の首の断面をふさぐ
+        List<List<int>> headLoops =
+            FindOrderedContours(headMesh, true);
+
+        if (headLoops.Count > 0)
+        {
+            CapContour(headMesh, headLoops[0]);
+        }
+        else
+        {
+            Debug.LogWarning("頭側の閉じた輪郭が見つかりませんでした。");
+        }
+
+        // 胴体の首の断面をふさぐ
+        List<List<int>> bodyLoops =
+            FindOrderedContours(bodyMesh, false);
+
+        if (bodyLoops.Count > 0)
+        {
+            // 胴体は一番高い位置の輪郭を使う
+            CapContour(bodyMesh, bodyLoops[bodyLoops.Count - 1]);
+        }
+        else
+        {
+            Debug.LogWarning("胴体側の閉じた輪郭が見つかりませんでした。");
+        }
+
+        // それぞれ別のオブジェクトとして作る
+        CreatePreview("HeadMesh_Test", headMesh);
+        CreatePreview("BodyMesh_Test", bodyMesh);
+
+        Debug.Log("頭と胴体の切り出しが完了しました！");
+        Debug.Log("頭の頂点数：" + headMesh.vertexCount);
+        Debug.Log("胴体の頂点数：" + bodyMesh.vertexCount);
+    }
+
+    private Mesh CreatePartMesh(
+        Mesh source,
+        BoneWeight[] weights,
+        bool[] headBones,
+        bool makeHead)
+    {
         Vector3[] vertices = source.vertices;
         Vector3[] normals = source.normals;
         Vector2[] uv = source.uv;
@@ -149,8 +209,6 @@ public class GKPartExtractor : MonoBehaviour
         List<List<int>> subMeshes =
             new List<List<int>>();
 
-        int triangleCount = 0;
-
         for (int s = 0; s < source.subMeshCount; s++)
         {
             int[] triangles = source.GetTriangles(s);
@@ -162,11 +220,19 @@ public class GKPartExtractor : MonoBehaviour
                 int b = triangles[i + 1];
                 int c = triangles[i + 2];
 
-                if (!IsHeadVertex(a, weights, headBones) ||
-                    !IsHeadVertex(b, weights, headBones) ||
-                    !IsHeadVertex(c, weights, headBones))
+                bool aIsHead = IsHeadVertex(a, weights, headBones);
+                bool bIsHead = IsHeadVertex(b, weights, headBones);
+                bool cIsHead = IsHeadVertex(c, weights, headBones);
+
+                if (makeHead)
                 {
-                    continue;
+                    if (!aIsHead || !bIsHead || !cIsHead)
+                        continue;
+                }
+                else
+                {
+                    if (aIsHead || bIsHead || cIsHead)
+                        continue;
                 }
 
                 int[] originalIndices = { a, b, c };
@@ -194,8 +260,6 @@ public class GKPartExtractor : MonoBehaviour
 
                     newTriangles.Add(vertexMap[originalIndex]);
                 }
-
-                triangleCount++;
             }
 
             subMeshes.Add(newTriangles);
@@ -203,17 +267,16 @@ public class GKPartExtractor : MonoBehaviour
 
         if (newVertices.Count == 0)
         {
-            Debug.LogError("頭のメッシュが見つかりませんでした！");
-            return;
+            Debug.LogError(
+                makeHead ? "頭のメッシュがありません！" :
+                           "胴体のメッシュがありません！");
+
+            return null;
         }
 
-        Transform old = target.transform.Find("HeadMesh_Test");
-
-        if (old != null)
-            DestroyImmediate(old.gameObject);
-
         Mesh result = new Mesh();
-        result.name = "ExtractedHead";
+
+        result.name = makeHead ? "ExtractedHead" : "ExtractedBody";
 
         if (newVertices.Count > 65535)
             result.indexFormat = IndexFormat.UInt32;
@@ -237,35 +300,7 @@ public class GKPartExtractor : MonoBehaviour
 
         result.RecalculateBounds();
 
-        GameObject preview = new GameObject("HeadMesh_Test");
-
-        preview.transform.SetParent(target.transform, false);
-        preview.transform.localPosition = Vector3.zero;
-        preview.transform.localRotation = Quaternion.identity;
-        preview.transform.localScale = Vector3.one;
-
-        MeshFilter filter = preview.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = preview.AddComponent<MeshRenderer>();
-
-        filter.sharedMesh = result;
-        meshRenderer.sharedMaterials = target.sharedMaterials;
-
-        Debug.Log("頭メッシュ切り出し完了！");
-        Debug.Log("切り出した頂点数：" + newVertices.Count);
-        Debug.Log("切り出した三角形数：" + triangleCount);
-
-        List<List<int>> loops = FindOrderedContours(result);
-
-        if (loops.Count > 0)
-        {
-            CapLowestContour(result, loops[0]);
-        }
-        else
-        {
-            Debug.LogWarning(
-                "閉じた輪郭が見つからなかったため、穴をふさげませんでした。"
-            );
-        }
+        return result;
     }
 
     private bool IsHeadVertex(
@@ -293,7 +328,33 @@ public class GKPartExtractor : MonoBehaviour
                headBones[boneIndex];
     }
 
-    private List<List<int>> FindOrderedContours(Mesh mesh)
+    private void CreatePreview(string objectName, Mesh mesh)
+    {
+        GameObject preview = new GameObject(objectName);
+
+        preview.transform.SetParent(target.transform, false);
+        preview.transform.localPosition = Vector3.zero;
+        preview.transform.localRotation = Quaternion.identity;
+        preview.transform.localScale = Vector3.one;
+
+        MeshFilter filter = preview.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = preview.AddComponent<MeshRenderer>();
+
+        filter.sharedMesh = mesh;
+        meshRenderer.sharedMaterials = target.sharedMaterials;
+    }
+
+    private void DeletePreview(string objectName)
+    {
+        Transform old = target.transform.Find(objectName);
+
+        if (old != null)
+            DestroyImmediate(old.gameObject);
+    }
+
+    private List<List<int>> FindOrderedContours(
+        Mesh mesh,
+        bool drawDebug)
     {
         Vector3[] vertices = mesh.vertices;
 
@@ -453,7 +514,7 @@ public class GKPartExtractor : MonoBehaviour
             return yA.CompareTo(yB);
         });
 
-        Debug.Log("統合後に検出した閉じた輪郭数：" + loops.Count);
+        Debug.Log("検出した閉じた輪郭数：" + loops.Count);
 
         for (int i = 0; i < loops.Count; i++)
         {
@@ -467,21 +528,23 @@ public class GKPartExtractor : MonoBehaviour
             Debug.Log(
                 "輪郭 " + (i + 1) +
                 " / 頂点数：" + loops[i].Count +
-                " / 中心：" + center
-            );
+                " / 中心：" + center);
         }
 
-        debugContour.Clear();
+        if (drawDebug)
+        {
+            debugContour.Clear();
 
-        int selected = showContourNumber - 1;
+            int selected = showContourNumber - 1;
 
-        if (selected >= 0 && selected < loops.Count)
-            debugContour.AddRange(loops[selected]);
+            if (selected >= 0 && selected < loops.Count)
+                debugContour.AddRange(loops[selected]);
+        }
 
         return loops;
     }
 
-    private void CapLowestContour(Mesh mesh, List<int> loop)
+    private void CapContour(Mesh mesh, List<int> loop)
     {
         if (loop == null || loop.Count < 3)
             return;
@@ -530,7 +593,7 @@ public class GKPartExtractor : MonoBehaviour
         if (hasColors)
             colors.Add(colorCenter);
 
-        // 首の輪郭を中心点から三角形でふさぐ
+        // 輪郭を中心点から三角形でふさぐ
         List<int> triangles =
             new List<int>(mesh.GetTriangles(0));
 
@@ -556,10 +619,7 @@ public class GKPartExtractor : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
-        Debug.Log(
-            "統合した境界をふさぎました。頂点数：" +
-            loop.Count
-        );
+        Debug.Log("断面をふさぎました。頂点数：" + loop.Count);
     }
 
     private void AddEdge(
@@ -617,8 +677,7 @@ public class GKPartExtractor : MonoBehaviour
                 preview.TransformPoint(
                     vertices[
                         debugContour[(i + 1) % debugContour.Count]
-                    ]
-                );
+                    ]);
 
             Gizmos.DrawLine(current, next);
             Gizmos.DrawSphere(current, 0.008f);
