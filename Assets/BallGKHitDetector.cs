@@ -22,9 +22,25 @@ public class BallGKHitDetector : MonoBehaviour
             return;
         }
 
+        // 得点を加算
         ScoreManager.Instance.AddScore(hitPoint.Point);
 
         scoredThisShot = true;
+
+        // HeadColliderに当たった場合
+        if (collision.collider.name == "HeadCollider")
+        {
+            GKHeadFly headFly = FindObjectOfType<GKHeadFly>();
+
+            if (headFly != null)
+            {
+                headFly.Fly(collision.relativeVelocity);
+            }
+            else
+            {
+                Debug.LogError("GKHeadFlyが見つかりません！");
+            }
+        }
     }
 
     // 次のシュートを始めるときに呼び出す
