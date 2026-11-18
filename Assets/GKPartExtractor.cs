@@ -5,10 +5,10 @@ using UnityEngine.Rendering;
 
 public class GKPartExtractor : MonoBehaviour
 {
-    [Header("頭を切り出す対象")]
+    [Header("切り出す対象")]
     public SkinnedMeshRenderer target;
 
-    [Header("赤線で表示する閉じた輪郭番号")]
+    [Header("赤線で表示する頭の輪郭番号")]
     public int showContourNumber = 1;
 
     private List<int> debugContour = new List<int>();
@@ -32,7 +32,6 @@ public class GKPartExtractor : MonoBehaviour
         public override bool Equals(object obj)
         {
             if (!(obj is Edge)) return false;
-
             Edge other = (Edge)obj;
             return a == other.a && b == other.b;
         }
@@ -61,7 +60,6 @@ public class GKPartExtractor : MonoBehaviour
         public override bool Equals(object obj)
         {
             if (!(obj is PositionKey)) return false;
-
             PositionKey other = (PositionKey)obj;
 
             return x == other.x &&
@@ -70,8 +68,8 @@ public class GKPartExtractor : MonoBehaviour
         }
     }
 
-    [ContextMenu("頭メッシュを切り出す")]
-    public void ExtractHead()
+    [ContextMenu("頭と胴体を切り出す")]
+    public void ExtractHeadAndBody()
     {
         if (target == null)
         {
@@ -93,6 +91,13 @@ public class GKPartExtractor : MonoBehaviour
         if (weights == null || weights.Length != source.vertexCount)
         {
             Debug.LogError("ボーンウェイトが取得できません！");
+            return;
+        }
+
+        if (source.bindposes == null ||
+            source.bindposes.Length != bones.Length)
+        {
+            Debug.LogError("Bindposesとボーン数が一致しません！");
             return;
         }
 
@@ -133,6 +138,80 @@ public class GKPartExtractor : MonoBehaviour
             }
         }
 
+        int fallbackBoneIndex = -1;
+        Transform headParent = bones[headIndex].parent;
+
+        for (int i = 0; i < bones.Length; i++)
+        {
+            if (bones[i] == headParent)
+            {
+                fallbackBoneIndex = i;
+                break;
+            }
+        }
+
+        if (fallbackBoneIndex == -1)
+        {
+            Debug.LogError("headの親ボーンがbones内に見つかりません！");
+            return;
+        }
+
+        Debug.Log("胴体の補助ボーン：" + bones[fallbackBoneIndex].name);
+
+        Mesh headMesh = CreatePartMesh(
+            source, weights, headBones, true, fallbackBoneIndex);
+
+        Mesh bodyMesh = CreatePartMesh(
+            source, weights, headBones, false, fallbackBoneIndex);
+
+        if (headMesh == null || bodyMesh == null)
+        {
+            Debug.LogError("頭または胴体のメッシュ作成に失敗しました！");
+            return;
+        }
+
+        DeletePreview("HeadMesh_Test");
+        DeletePreview("BodyMesh_Test");
+
+        List<List<int>> headLoops =
+            FindOrderedContours(headMesh, true);
+
+        if (headLoops.Count > 0)
+        {
+            CapContour(headMesh, headLoops[0]);
+        }
+        else
+        {
+            Debug.LogWarning("頭側の閉じた輪郭が見つかりませんでした。");
+        }
+
+        List<List<int>> bodyLoops =
+            FindOrderedContours(bodyMesh, false);
+
+        if (bodyLoops.Count > 0)
+        {
+            CapContour(bodyMesh, bodyLoops[bodyLoops.Count - 1]);
+        }
+        else
+        {
+            Debug.LogWarning("胴体側の閉じた輪郭が見つかりませんでした。");
+        }
+
+        CreatePreview("HeadMesh_Test", headMesh);
+        CreatePreview("BodyMesh_Test", bodyMesh);
+
+        Debug.Log("頭と胴体の切り出しが完了しました！");
+        Debug.Log("頭の頂点数：" + headMesh.vertexCount);
+        Debug.Log("胴体の頂点数：" + bodyMesh.vertexCount);
+    }
+
+    private Mesh CreatePartMesh(
+        Mesh source,
+        BoneWeight[] weights,
+        bool[] headBones,
+        bool makeHead,
+        int fallbackBoneIndex)
+    {
         Vector3[] vertices = source.vertices;
         Vector3[] normals = source.normals;
         Vector2[] uv = source.uv;
@@ -142,14 +221,13 @@ public class GKPartExtractor : MonoBehaviour
         List<Vector3> newNormals = new List<Vector3>();
         List<Vector2> newUV = new List<Vector2>();
         List<Color> newColors = new List<Color>();
+        List<BoneWeight> newWeights = new List<BoneWeight>();
 
         Dictionary<int, int> vertexMap =
             new Dictionary<int, int>();
 
         List<List<int>> subMeshes =
             new List<List<int>>();
-
-        int triangleCount = 0;
 
         for (int s = 0; s < source.subMeshCount; s++)
         {
@@ -162,11 +240,19 @@ public class GKPartExtractor : MonoBehaviour
                 int b = triangles[i + 1];
                 int c = triangles[i + 2];
 
-                if (!IsHeadVertex(a, weights, headBones) ||
-                    !IsHeadVertex(b, weights, headBones) ||
-                    !IsHeadVertex(c, weights, headBones))
+                bool aIsHead = IsHeadVertex(a, weights, headBones);
+                bool bIsHead = IsHeadVertex(b, weights, headBones);
+                bool cIsHead = IsHeadVertex(c, weights, headBones);
+
+                if (makeHead)
                 {
-                    continue;
+                    if (!aIsHead || !bIsHead || !cIsHead)
+                        continue;
+                }
+                else
+                {
+                    if (aIsHead || bIsHead || cIsHead)
+                        continue;
                 }
 
                 int[] originalIndices = { a, b, c };
@@ -182,6 +268,18 @@ public class GKPartExtractor : MonoBehaviour
 
                         newVertices.Add(vertices[originalIndex]);
 
+                        BoneWeight newWeight = weights[originalIndex];
+
+                        if (!makeHead)
+                        {
+                            newWeight = RemoveHeadBoneWeights(
+                                newWeight,
+                                headBones,
+                                fallbackBoneIndex);
+                        }
+
+                        newWeights.Add(newWeight);
+
                         if (normals.Length == vertices.Length)
                             newNormals.Add(normals[originalIndex]);
 
@@ -194,8 +292,6 @@ public class GKPartExtractor : MonoBehaviour
 
                     newTriangles.Add(vertexMap[originalIndex]);
                 }
-
-                triangleCount++;
             }
 
             subMeshes.Add(newTriangles);
@@ -203,17 +299,14 @@ public class GKPartExtractor : MonoBehaviour
 
         if (newVertices.Count == 0)
         {
-            Debug.LogError("頭のメッシュが見つかりませんでした！");
-            return;
+            Debug.LogError(
+                makeHead ? "頭のメッシュがありません！" :
+                           "胴体のメッシュがありません！");
+            return null;
         }
 
-        Transform old = target.transform.Find("HeadMesh_Test");
-
-        if (old != null)
-            DestroyImmediate(old.gameObject);
-
         Mesh result = new Mesh();
-        result.name = "ExtractedHead";
+        result.name = makeHead ? "ExtractedHead" : "ExtractedBody";
 
         if (newVertices.Count > 65535)
             result.indexFormat = IndexFormat.UInt32;
@@ -235,37 +328,95 @@ public class GKPartExtractor : MonoBehaviour
         if (newColors.Count == newVertices.Count)
             result.SetColors(newColors);
 
+        result.boneWeights = newWeights.ToArray();
+        result.bindposes = source.bindposes;
+
         result.RecalculateBounds();
 
-        GameObject preview = new GameObject("HeadMesh_Test");
+        return result;
+    }
 
-        preview.transform.SetParent(target.transform, false);
-        preview.transform.localPosition = Vector3.zero;
-        preview.transform.localRotation = Quaternion.identity;
-        preview.transform.localScale = Vector3.one;
+    private BoneWeight RemoveHeadBoneWeights(
+        BoneWeight original,
+        bool[] headBones,
+        int fallbackBoneIndex)
+    {
+        Dictionary<int, float> influence =
+            new Dictionary<int, float>();
 
-        MeshFilter filter = preview.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = preview.AddComponent<MeshRenderer>();
+        AddBodyInfluence(
+            influence, original.boneIndex0, original.weight0, headBones);
 
-        filter.sharedMesh = result;
-        meshRenderer.sharedMaterials = target.sharedMaterials;
+        AddBodyInfluence(
+            influence, original.boneIndex1, original.weight1, headBones);
 
-        Debug.Log("頭メッシュ切り出し完了！");
-        Debug.Log("切り出した頂点数：" + newVertices.Count);
-        Debug.Log("切り出した三角形数：" + triangleCount);
+        AddBodyInfluence(
+            influence, original.boneIndex2, original.weight2, headBones);
 
-        List<List<int>> loops = FindOrderedContours(result);
+        AddBodyInfluence(
+            influence, original.boneIndex3, original.weight3, headBones);
 
-        if (loops.Count > 0)
+        List<KeyValuePair<int, float>> sorted =
+            new List<KeyValuePair<int, float>>(influence);
+
+        sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
+
+        BoneWeight result = new BoneWeight();
+
+        float total = 0f;
+        int count = Mathf.Min(4, sorted.Count);
+
+        for (int i = 0; i < count; i++)
+            total += sorted[i].Value;
+
+        if (total <= 0.0001f)
         {
-            CapLowestContour(result, loops[0]);
+            result.boneIndex0 = fallbackBoneIndex;
+            result.weight0 = 1f;
+            return result;
         }
+
+        if (count > 0)
+        {
+            result.boneIndex0 = sorted[0].Key;
+            result.weight0 = sorted[0].Value / total;
+        }
+
+        if (count > 1)
+        {
+            result.boneIndex1 = sorted[1].Key;
+            result.weight1 = sorted[1].Value / total;
+        }
+
+        if (count > 2)
+        {
+            result.boneIndex2 = sorted[2].Key;
+            result.weight2 = sorted[2].Value / total;
+        }
+
+        if (count > 3)
+        {
+            result.boneIndex3 = sorted[3].Key;
+            result.weight3 = sorted[3].Value / total;
+        }
+
+        return result;
+    }
+
+    private void AddBodyInfluence(
+        Dictionary<int, float> influence,
+        int boneIndex,
+        float weight,
+        bool[] headBones)
+    {
+        if (weight <= 0f) return;
+        if (boneIndex < 0 || boneIndex >= headBones.Length) return;
+        if (headBones[boneIndex]) return;
+
+        if (influence.ContainsKey(boneIndex))
+            influence[boneIndex] += weight;
         else
-        {
-            Debug.LogWarning(
-                "閉じた輪郭が見つからなかったため、穴をふさげませんでした。"
-            );
-        }
+            influence.Add(boneIndex, weight);
     }
 
     private bool IsHeadVertex(
@@ -293,7 +444,36 @@ public class GKPartExtractor : MonoBehaviour
                headBones[boneIndex];
     }
 
-    private List<List<int>> FindOrderedContours(Mesh mesh)
+    private void CreatePreview(string objectName, Mesh mesh)
+    {
+        GameObject preview = new GameObject(objectName);
+
+        preview.transform.SetParent(target.transform, false);
+        preview.transform.localPosition = Vector3.zero;
+        preview.transform.localRotation = Quaternion.identity;
+        preview.transform.localScale = Vector3.one;
+
+        SkinnedMeshRenderer skinnedRenderer =
+            preview.AddComponent<SkinnedMeshRenderer>();
+
+        skinnedRenderer.sharedMesh = mesh;
+        skinnedRenderer.bones = target.bones;
+        skinnedRenderer.rootBone = target.rootBone;
+        skinnedRenderer.sharedMaterials = target.sharedMaterials;
+        skinnedRenderer.localBounds = target.localBounds;
+    }
+
+    private void DeletePreview(string objectName)
+    {
+        Transform old = target.transform.Find(objectName);
+
+        if (old != null)
+            DestroyImmediate(old.gameObject);
+    }
+
+    private List<List<int>> FindOrderedContours(
+        Mesh mesh,
+        bool drawDebug)
     {
         Vector3[] vertices = mesh.vertices;
 
@@ -303,7 +483,6 @@ public class GKPartExtractor : MonoBehaviour
         List<int> representative = new List<int>();
         int[] welded = new int[vertices.Length];
 
-        // 同じ位置の頂点をまとめる
         for (int i = 0; i < vertices.Length; i++)
         {
             PositionKey key = new PositionKey(vertices[i]);
@@ -435,7 +614,6 @@ public class GKPartExtractor : MonoBehaviour
             }
         }
 
-        // 平均Yが低い輪郭から並べる
         loops.Sort((a, b) =>
         {
             float yA = 0f;
@@ -453,7 +631,7 @@ public class GKPartExtractor : MonoBehaviour
             return yA.CompareTo(yB);
         });
 
-        Debug.Log("統合後に検出した閉じた輪郭数：" + loops.Count);
+        Debug.Log("検出した閉じた輪郭数：" + loops.Count);
 
         for (int i = 0; i < loops.Count; i++)
         {
@@ -467,21 +645,23 @@ public class GKPartExtractor : MonoBehaviour
             Debug.Log(
                 "輪郭 " + (i + 1) +
                 " / 頂点数：" + loops[i].Count +
-                " / 中心：" + center
-            );
+                " / 中心：" + center);
         }
 
-        debugContour.Clear();
+        if (drawDebug)
+        {
+            debugContour.Clear();
 
-        int selected = showContourNumber - 1;
+            int selected = showContourNumber - 1;
 
-        if (selected >= 0 && selected < loops.Count)
-            debugContour.AddRange(loops[selected]);
+            if (selected >= 0 && selected < loops.Count)
+                debugContour.AddRange(loops[selected]);
+        }
 
         return loops;
     }
 
-    private void CapLowestContour(Mesh mesh, List<int> loop)
+    private void CapContour(Mesh mesh, List<int> loop)
     {
         if (loop == null || loop.Count < 3)
             return;
@@ -494,6 +674,9 @@ public class GKPartExtractor : MonoBehaviour
 
         List<Color> colors =
             new List<Color>(mesh.colors);
+
+        List<BoneWeight> weights =
+            new List<BoneWeight>(mesh.boneWeights);
 
         bool hasUV = uv.Count == vertices.Count;
         bool hasColors = colors.Count == vertices.Count;
@@ -530,7 +713,37 @@ public class GKPartExtractor : MonoBehaviour
         if (hasColors)
             colors.Add(colorCenter);
 
-        // 首の輪郭を中心点から三角形でふさぐ
+        // 中央頂点をHipに100%追従させるテスト
+        BoneWeight capWeight = new BoneWeight();
+
+        Transform[] bones = target.bones;
+        int hipIndex = -1;
+
+        for (int i = 0; i < bones.Length; i++)
+        {
+            if (bones[i] != null && bones[i].name == "hip")
+            {
+                hipIndex = i;
+                break;
+            }
+        }
+
+        if (hipIndex == -1)
+        {
+            Debug.LogError("Hipボーンが見つかりません！");
+            return;
+        }
+
+        capWeight.boneIndex0 = hipIndex;
+        capWeight.weight0 = 1f;
+
+        weights.Add(capWeight);
+
+        Debug.Log(
+            "【首の中央頂点ウェイト】Hip 100% / Bone Index：" +
+            hipIndex
+        );
+
         List<int> triangles =
             new List<int>(mesh.GetTriangles(0));
 
@@ -553,13 +766,86 @@ public class GKPartExtractor : MonoBehaviour
         if (hasColors)
             mesh.SetColors(colors);
 
+        mesh.boneWeights = weights.ToArray();
+
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
-        Debug.Log(
-            "統合した境界をふさぎました。頂点数：" +
-            loop.Count
-        );
+        Debug.Log("断面をふさぎました。頂点数：" + loop.Count);
+    }
+
+    private BoneWeight AverageBoneWeights(
+        List<BoneWeight> weights,
+        List<int> loop)
+    {
+        Dictionary<int, float> influence =
+            new Dictionary<int, float>();
+
+        foreach (int index in loop)
+        {
+            BoneWeight w = weights[index];
+
+            AddInfluence(influence, w.boneIndex0, w.weight0);
+            AddInfluence(influence, w.boneIndex1, w.weight1);
+            AddInfluence(influence, w.boneIndex2, w.weight2);
+            AddInfluence(influence, w.boneIndex3, w.weight3);
+        }
+
+        List<KeyValuePair<int, float>> sorted =
+            new List<KeyValuePair<int, float>>(influence);
+
+        sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
+
+        BoneWeight result = new BoneWeight();
+
+        float total = 0f;
+        int count = Mathf.Min(4, sorted.Count);
+
+        for (int i = 0; i < count; i++)
+            total += sorted[i].Value;
+
+        if (total <= 0f)
+            return result;
+
+        if (count > 0)
+        {
+            result.boneIndex0 = sorted[0].Key;
+            result.weight0 = sorted[0].Value / total;
+        }
+
+        if (count > 1)
+        {
+            result.boneIndex1 = sorted[1].Key;
+            result.weight1 = sorted[1].Value / total;
+        }
+
+        if (count > 2)
+        {
+            result.boneIndex2 = sorted[2].Key;
+            result.weight2 = sorted[2].Value / total;
+        }
+
+        if (count > 3)
+        {
+            result.boneIndex3 = sorted[3].Key;
+            result.weight3 = sorted[3].Value / total;
+        }
+
+        return result;
+    }
+
+    private void AddInfluence(
+        Dictionary<int, float> influence,
+        int boneIndex,
+        float weight)
+    {
+        if (weight <= 0f)
+            return;
+
+        if (influence.ContainsKey(boneIndex))
+            influence[boneIndex] += weight;
+        else
+            influence.Add(boneIndex, weight);
     }
 
     private void AddEdge(
@@ -598,13 +884,15 @@ public class GKPartExtractor : MonoBehaviour
 
         if (preview == null) return;
 
-        MeshFilter filter =
-            preview.GetComponent<MeshFilter>();
+        SkinnedMeshRenderer skinnedRenderer =
+            preview.GetComponent<SkinnedMeshRenderer>();
 
-        if (filter == null || filter.sharedMesh == null)
+        if (skinnedRenderer == null ||
+            skinnedRenderer.sharedMesh == null)
             return;
 
-        Vector3[] vertices = filter.sharedMesh.vertices;
+        Vector3[] vertices =
+            skinnedRenderer.sharedMesh.vertices;
 
         Gizmos.color = Color.red;
 
@@ -617,8 +905,7 @@ public class GKPartExtractor : MonoBehaviour
                 preview.TransformPoint(
                     vertices[
                         debugContour[(i + 1) % debugContour.Count]
-                    ]
-                );
+                    ]);
 
             Gizmos.DrawLine(current, next);
             Gizmos.DrawSphere(current, 0.008f);
