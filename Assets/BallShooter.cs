@@ -202,6 +202,7 @@ public class BallShooter : MonoBehaviour
     void CreateAimRing()
     {
         GameObject ring = new GameObject("AimRing");
+        ring.layer = LayerMask.NameToLayer("AimOnly");
 
         ringObject = ring.transform;
 
