@@ -24,6 +24,15 @@ public class TitleManager : MonoBehaviour
         StartCoroutine(LoadGameScenes());
     }
 
+    public void ExitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+    Application.Quit(); 
+#endif
+    }
+
     private IEnumerator LoadGameScenes()
     {
         // ShootAimSceneを読み込む
