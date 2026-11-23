@@ -119,23 +119,23 @@ public class GKMouseBoneDrag : MonoBehaviour
 
     void Start()
     {
-        // 編集OFFなら操作用の円・矢印を作らない
-        if (!enableEditing)
-            return;
-
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
         }
 
+        // 回転リングを作成
         CreateRotationRings();
+
+        // 移動矢印を作成
         CreateMoveArrows();
+
+        // 全身回転リングを作成
         CreateWholeBodyRotationRing();
 
-        // 起動時から移動矢印を表示
+        // 起動時から移動矢印を表示できるようにする
         GKBoneHandle[] handles =
-            FindObjectsByType<GKBoneHandle>(
-                FindObjectsSortMode.None);
+            GetComponentsInChildren<GKBoneHandle>(true);
 
         foreach (GKBoneHandle handle in handles)
         {
@@ -147,6 +147,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
                 SetMoveArrowRenderers(true);
                 UpdateMoveArrowPositions();
+
                 break;
             }
         }
@@ -156,6 +157,9 @@ public class GKMouseBoneDrag : MonoBehaviour
             Debug.LogWarning(
                 "GK移動矢印：MoveSidewaysに設定されたGKBoneHandleが見つかりません。hipのHandle Typeを確認してください。");
         }
+
+        // Inspectorの設定に合わせて操作状態を反映
+        SetEditing(enableEditing);
     }
 
     void Update()
@@ -237,6 +241,7 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         GameObject ringObject =
             new GameObject("WholeBodyRotationRing");
+        ringObject.layer = LayerMask.NameToLayer("GKOnly");
 
         ringObject.transform.SetParent(transform, false);
 
@@ -420,6 +425,7 @@ public class GKMouseBoneDrag : MonoBehaviour
     {
         GameObject arrowObject =
             new GameObject(objectName);
+        arrowObject.layer = LayerMask.NameToLayer("GKOnly");
 
         arrowObject.transform.SetParent(transform, false);
 
@@ -446,6 +452,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         Color color)
     {
         GameObject lineObject = new GameObject(objectName);
+        lineObject.layer = LayerMask.NameToLayer("GKOnly");
 
         lineObject.transform.SetParent(parent, false);
 
@@ -570,8 +577,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         rings.Clear();
 
         GKBoneHandle[] handles =
-            FindObjectsByType<GKBoneHandle>(
-                FindObjectsSortMode.None);
+     GetComponentsInChildren<GKBoneHandle>(true);
 
         foreach (GKBoneHandle handle in handles)
         {
@@ -597,6 +603,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         string ringName)
     {
         GameObject ringObject = new GameObject(ringName);
+        ringObject.layer = LayerMask.NameToLayer("GKOnly");
 
         ringObject.transform.SetParent(bone, false);
         ringObject.transform.localPosition = Vector3.zero;
@@ -1199,4 +1206,62 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         UpdateMoveArrowPositions();
     }
+
+
+
+    // ------------------------------
+    // GK操作のON/OFF切り替え
+    // ------------------------------
+
+
+    public void SetEditing(bool enabled)
+    {
+        enableEditing = enabled;
+
+        // 関節リングの表示切り替え
+        foreach (RotationRing ring in rings)
+        {
+            if (ring.line != null)
+            {
+                ring.line.enabled = enabled;
+            }
+
+            // 次のターンでは回転角度をゼロから管理する
+            if (enabled)
+            {
+                ring.currentAngle = 0f;
+            }
+        }
+
+        // 全身回転リングの表示切り替え
+        if (wholeBodyRotationLine != null)
+        {
+            wholeBodyRotationLine.enabled = enabled;
+        }
+
+        // 移動矢印の表示切り替え
+        SetMoveArrowRenderers(enabled && moveGizmoVisible);
+
+        // 操作状態をすべてリセット
+        selectedRing = null;
+        selectedMoveHandle = null;
+
+        draggingMoveArrow = false;
+        draggingWholeBodyRotation = false;
+
+        dragRingScreenPoints = null;
+
+        previousWorldVector = Vector3.zero;
+        previousRingAngle = 0f;
+        previousMousePosition = Vector2.zero;
+
+        if (enabled)
+        {
+            UpdateMoveArrowPositions();
+            UpdateWholeBodyRotationRing();
+        }
+
+        Debug.Log("GK操作：" + (enabled ? "ON" : "OFF"));
+    }
+
 }

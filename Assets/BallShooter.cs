@@ -27,7 +27,7 @@ public class BallShooter : MonoBehaviour
     [Header("リングを見るカメラ")]
     [SerializeField] private Camera aimCamera;
 
-    [Header("Sceneごとの動作設定")]
+    [Header("動作設定")]
     [SerializeField] private bool allowAimControl = true;
     [SerializeField] private bool allowShooting = true;
     [SerializeField] private bool loadSavedAimOnStart = false;
@@ -41,16 +41,31 @@ public class BallShooter : MonoBehaviour
 
     private bool hasShot;
     private bool aimInputLocked;
+    private bool shooterControlEnabled = false;
+
     private Vector2 aimOffset;
+    private Vector2 initialAimOffset;
 
     private LineRenderer ringRenderer;
     private Transform ringObject;
+
+    private Vector3 initialBallPosition;
+    private Quaternion initialBallRotation;
+    private bool initialUseGravity;
+    private bool initialIsKinematic;
+    private CollisionDetectionMode initialCollisionMode;
 
     private const string AimXKey = "ShotTarget_X";
     private const string AimYKey = "ShotTarget_Y";
 
     void Start()
     {
+        if (ballRigidbody == null)
+        {
+            Debug.LogError("Ball Rigidbodyが設定されていません。");
+            return;
+        }
+
         if (aimPoint == null)
         {
             Debug.LogError("Aim Pointが設定されていません。");
@@ -63,11 +78,15 @@ public class BallShooter : MonoBehaviour
             return;
         }
 
-        // カメラを取得
+        initialBallPosition = ballRigidbody.position;
+        initialBallRotation = ballRigidbody.rotation;
+
+        initialUseGravity = ballRigidbody.useGravity;
+        initialIsKinematic = ballRigidbody.isKinematic;
+        initialCollisionMode = ballRigidbody.collisionDetectionMode;
+
         if (aimCamera == null)
-        {
             aimCamera = Camera.main;
-        }
 
         Vector3 localPos =
             aimCenter.InverseTransformPoint(aimPoint.position);
@@ -90,25 +109,32 @@ public class BallShooter : MonoBehaviour
             }
         }
 
-        UpdateAimPosition();
+        // ゲーム開始時の照準位置を記録
+        initialAimOffset = aimOffset;
 
+        UpdateAimPosition();
         CreateAimRing();
+
+        SetShooterControl(false);
     }
 
     void Update()
     {
-        if (hasShot || aimInputLocked ||
-            aimPoint == null || aimCenter == null)
+        if (!shooterControlEnabled ||
+            hasShot ||
+            aimInputLocked ||
+            aimPoint == null ||
+            aimCenter == null)
+        {
             return;
+        }
 
         if (allowAimControl)
         {
             Vector2 input = Vector2.zero;
 
             if (Gamepad.current != null)
-            {
                 input = Gamepad.current.leftStick.ReadValue();
-            }
 
             if (Keyboard.current != null)
             {
@@ -155,58 +181,49 @@ public class BallShooter : MonoBehaviour
              Keyboard.current.spaceKey.wasPressedThisFrame);
 
         if (shootPressed)
-        {
             BeginShoot();
-        }
     }
 
-    // リングの向きを毎フレームカメラに合わせる
     void LateUpdate()
     {
-        if (ringObject == null)
-            return;
+        if (ringObject == null) return;
 
         if (aimCamera == null)
-        {
             aimCamera = Camera.main;
-        }
 
         if (aimCamera != null)
-        {
             ringObject.rotation = aimCamera.transform.rotation;
-        }
     }
 
-    // AimPointとリングの位置を更新
+    public void SetShooterControl(bool enabled)
+    {
+        shooterControlEnabled = enabled;
+
+        Debug.Log("キッカー操作：" + (enabled ? "ON" : "OFF"));
+    }
+
     void UpdateAimPosition()
     {
-        Vector3 localPosition =
-            new Vector3(
-                aimOffset.x,
-                aimOffset.y,
-                ringForwardOffset
-            );
+        Vector3 localPosition = new Vector3(
+            aimOffset.x,
+            aimOffset.y,
+            ringForwardOffset
+        );
 
-        // リングの中心となる目標座標
         aimPoint.position =
             aimCenter.TransformPoint(localPosition);
 
-        // リングをAimPointと同じ位置にする
         if (ringObject != null)
-        {
             ringObject.position = aimPoint.position;
-        }
     }
 
-    // リングをコードで生成
     void CreateAimRing()
     {
         GameObject ring = new GameObject("AimRing");
+
         ring.layer = LayerMask.NameToLayer("AimOnly");
 
         ringObject = ring.transform;
-
-        // 親オブジェクトにはしない
         ringObject.position = aimPoint.position;
         ringObject.rotation = Quaternion.identity;
         ringObject.localScale = Vector3.one;
@@ -226,14 +243,11 @@ public class BallShooter : MonoBehaviour
         ringRenderer.numCornerVertices = 4;
         ringRenderer.numCapVertices = 4;
 
-        // マテリアルを作成
         Shader shader =
             Shader.Find("Universal Render Pipeline/Unlit");
 
         if (shader == null)
-        {
             shader = Shader.Find("Sprites/Default");
-        }
 
         if (shader != null)
         {
@@ -246,11 +260,9 @@ public class BallShooter : MonoBehaviour
             Debug.LogError("リング用Shaderが見つかりません。");
         }
 
-        // 正円の座標を生成
         for (int i = 0; i < ringSegments; i++)
         {
-            float angle =
-                2f * Mathf.PI * i / ringSegments;
+            float angle = 2f * Mathf.PI * i / ringSegments;
 
             float x = Mathf.Cos(angle) * ringRadius;
             float y = Mathf.Sin(angle) * ringRadius;
@@ -261,16 +273,12 @@ public class BallShooter : MonoBehaviour
             );
         }
 
-        // 最初からカメラに正対させる
         if (aimCamera != null)
-        {
             ringObject.rotation = aimCamera.transform.rotation;
-        }
 
-        Debug.Log("正円のエイムリングを生成しました！");
+        Debug.Log("エイムリングを生成しました！");
     }
 
-    // エイム位置を保存
     public void SaveAimPosition()
     {
         PlayerPrefs.SetFloat(AimXKey, aimOffset.x);
@@ -280,34 +288,37 @@ public class BallShooter : MonoBehaviour
 
         Debug.Log(
             "シュート位置を保存しました！ X：" +
-            aimOffset.x + " Y：" + aimOffset.y);
+            aimOffset.x + " Y：" + aimOffset.y
+        );
     }
 
-    // シュート開始
     private void BeginShoot()
     {
-        if (hasShot || aimInputLocked)
+        if (!shooterControlEnabled ||
+            hasShot ||
+            aimInputLocked)
+        {
             return;
+        }
 
         aimInputLocked = true;
 
         if (blackoutFreezeController != null)
-        {
             blackoutFreezeController.TryStartFreeze(Shoot);
-        }
         else
         {
             Debug.LogWarning(
-                "BlackoutFreezeControllerが設定されていません。通常シュートします。");
+                "BlackoutFreezeControllerが設定されていません。通常シュートします。"
+            );
 
             Shoot();
         }
     }
 
-    // 実際にボールを飛ばす
     public void Shoot()
     {
-        if (!allowShooting ||
+        if (!shooterControlEnabled ||
+            !allowShooting ||
             hasShot ||
             ballRigidbody == null ||
             aimPoint == null)
@@ -316,7 +327,6 @@ public class BallShooter : MonoBehaviour
             return;
         }
 
-        // リングの中心に向かう方向を計算
         Vector3 direction =
             aimPoint.position - ballRigidbody.position;
 
@@ -328,13 +338,19 @@ public class BallShooter : MonoBehaviour
 
         direction.Normalize();
 
-        hasShot = true;
+        ShooterCameraRig cameraRig =
+            FindAnyObjectByType<ShooterCameraRig>();
 
-        // シュートした瞬間にリングを消す
+        if (cameraRig != null)
+            cameraRig.StartKick();
+        else
+            Debug.LogError("ShooterCameraRigが見つかりません！");
+
+        hasShot = true;
+        shooterControlEnabled = false;
+
         if (ringObject != null)
-        {
             ringObject.gameObject.SetActive(false);
-        }
 
         ballRigidbody.useGravity = false;
         ballRigidbody.isKinematic = false;
@@ -346,13 +362,41 @@ public class BallShooter : MonoBehaviour
             direction * shootSpeed;
 
         if (sceneTransition != null)
-        {
             sceneTransition.StartTransitionTimer();
-        }
         else
-        {
-            Debug.LogError(
-                "Scene Transitionが設定されていません。");
-        }
+            Debug.LogError("SceneTransitionが設定されていません。");
+    }
+
+    public void ResetBall()
+    {
+        if (ballRigidbody == null) return;
+
+        ballRigidbody.linearVelocity = Vector3.zero;
+        ballRigidbody.angularVelocity = Vector3.zero;
+
+        ballRigidbody.position = initialBallPosition;
+        ballRigidbody.rotation = initialBallRotation;
+
+        ballRigidbody.useGravity = initialUseGravity;
+        ballRigidbody.isKinematic = initialIsKinematic;
+
+        ballRigidbody.collisionDetectionMode =
+            initialCollisionMode;
+
+        ballRigidbody.Sleep();
+
+        hasShot = false;
+        aimInputLocked = false;
+
+        // AimRingとAimPointを初期位置に戻す
+        aimOffset = initialAimOffset;
+        UpdateAimPosition();
+
+        if (ringObject != null)
+            ringObject.gameObject.SetActive(true);
+
+        SetShooterControl(false);
+
+        Debug.Log("ボールとAimRingを初期位置に戻しました！");
     }
 }

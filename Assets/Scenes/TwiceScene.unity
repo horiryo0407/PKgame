@@ -262,7 +262,6 @@ MonoBehaviour:
   lShin: {fileID: 664371982}
   rThighBend: {fileID: 1235992544}
   rShin: {fileID: 768013769}
-  loadPoseOnStart: 0
 --- !u!114 &5885943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,7 +331,7 @@ Transform:
   m_GameObject: {fileID: 5885937}
   serializedVersion: 2
   m_LocalRotation: {x: 0.09981577, y: 0.01991459, z: -0.025790486, w: 0.99447227}
-  m_LocalPosition: {x: -0.304, y: 0.133, z: -5.95}
+  m_LocalPosition: {x: -0.179, y: 0.13, z: -5.922}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -448,7 +447,7 @@ GameObject:
   - component: {fileID: 24587254}
   - component: {fileID: 24587256}
   - component: {fileID: 24587255}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: timer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1166,7 +1165,6 @@ MonoBehaviour:
   lShin: {fileID: 1661288476}
   rThighBend: {fileID: 1661288480}
   rShin: {fileID: 1661288474}
-  loadPoseOnStart: 0
 --- !u!114 &130682462
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1180,7 +1178,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKMouseBoneDrag
   enableEditing: 1
-  targetCamera: {fileID: 0}
+  targetCamera: {fileID: 1169024032}
   ringRadius: 0.18
   ringWidth: 0.01
   clickDistance: 14
@@ -1205,118 +1203,6 @@ MonoBehaviour:
   moveArrowLength: 0.45
   moveArrowWidth: 0.012
   moveArrowClickDistance: 18
---- !u!1 &140908108
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 140908112}
-  - component: {fileID: 140908111}
-  - component: {fileID: 140908110}
-  - component: {fileID: 140908109}
-  m_Layer: 15
-  m_Name: Sphere
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!135 &140908109
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140908108}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &140908110
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140908108}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &140908111
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140908108}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &140908112
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140908108}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.12, y: 0, z: -0.31}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &142483095
 GameObject:
   m_ObjectHideFlags: 0
@@ -2415,7 +2301,9 @@ MonoBehaviour:
   limitTime: 10
   timerText: {fileID: 1277374566}
   timerGauge: {fileID: 1646012412}
+  gkMouseBoneDrag: {fileID: 130682462}
   poseSave: {fileID: 130682461}
+  kickerPoseSave: {fileID: 5885942}
 --- !u!4 &396228845
 Transform:
   m_ObjectHideFlags: 0
@@ -4556,7 +4444,7 @@ GameObject:
   - component: {fileID: 786441257}
   - component: {fileID: 786441256}
   - component: {fileID: 786441255}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Main Camera KK
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -5732,7 +5620,7 @@ GameObject:
   - component: {fileID: 1006468204}
   - component: {fileID: 1006468203}
   - component: {fileID: 1006468202}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Canvas(timer)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6891,7 +6779,7 @@ GameObject:
   - component: {fileID: 1169024032}
   - component: {fileID: 1169024031}
   - component: {fileID: 1169024030}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Main Camera GK
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -6989,7 +6877,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 127
+    m_Bits: 119
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 1
@@ -9604,7 +9492,7 @@ GameObject:
   - component: {fileID: 1439741367}
   - component: {fileID: 1439741369}
   - component: {fileID: 1439741368}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: TimerText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11192,7 +11080,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
   cameraRig: {fileID: 0}
-  nextSceneName: GKPoseSetting
   transitionDelay: 10
 --- !u!4 &1656497319
 Transform:
@@ -13407,7 +13294,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1925938907
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14377,6 +14264,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnSkinManager
   shooterSkin: {fileID: 1238490893}
   keeperSkin: {fileID: 130682460}
+  kkKeeperSkin: {fileID: 5885940}
 --- !u!4 &2036829046
 Transform:
   m_ObjectHideFlags: 0
@@ -15150,7 +15038,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1272426206}
-  - {fileID: 140908112}
   - {fileID: 60494741}
   - {fileID: 830419748}
   - {fileID: 860675377}
