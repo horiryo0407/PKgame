@@ -1,4 +1,3 @@
-
 using System.Collections;
 using UnityEngine;
 
@@ -18,7 +17,8 @@ public class SceneTransition : MonoBehaviour
 
     private bool isTransitioning = false;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    [RuntimeInitializeOnLoadMethod(
+        RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStaticData()
     {
         currentPlayer = 0;
@@ -33,10 +33,10 @@ public class SceneTransition : MonoBehaviour
     {
         if (cameraRig == null)
         {
-            cameraRig = FindAnyObjectByType<ShooterCameraRig>();
+            cameraRig =
+                FindAnyObjectByType<ShooterCameraRig>();
         }
 
-        // 最初はプレイヤー1がキッカー
         ApplyTurnSettings();
 
         if (cameraRig != null)
@@ -48,7 +48,6 @@ public class SceneTransition : MonoBehaviour
     // 現在のターンに合わせて設定
     private void ApplyTurnSettings()
     {
-        // ユニフォームを切り替える
         TurnSkinManager skin =
             FindAnyObjectByType<TurnSkinManager>();
 
@@ -57,7 +56,6 @@ public class SceneTransition : MonoBehaviour
             skin.ApplyTurn(currentPlayer + 1);
         }
 
-        // GKタイマーを開始する
         GKPositionTimer timer =
             FindAnyObjectByType<GKPositionTimer>();
 
@@ -79,23 +77,33 @@ public class SceneTransition : MonoBehaviour
     // シュートした瞬間に呼び出す
     public void StartTransitionTimer()
     {
-        if (isTransitioning) return;
+        if (isTransitioning)
+            return;
 
-        Debug.Log("シュート後のタイマーを開始しました！");
+        isTransitioning = true;
+
+        Debug.Log("シュートを検知しました！");
+
+        // ここではKKdidaにポーズをコピーしない
+        // GKSlowDiveの反応ディレイ終了後にポーズを反映する
+
         StartCoroutine(TransitionAfterShot());
     }
 
     private IEnumerator TransitionAfterShot()
     {
-        isTransitioning = true;
+        Debug.Log(
+            transitionDelay + "秒後にターンを交代します。"
+        );
 
-        Debug.Log(transitionDelay + "秒後にターンを交代します。");
-
-        yield return new WaitForSecondsRealtime(transitionDelay);
+        yield return new WaitForSecondsRealtime(
+            transitionDelay
+        );
 
         if (ScoreManager.Instance == null)
         {
             Debug.LogError("ScoreManagerが見つかりません！");
+            isTransitioning = false;
             yield break;
         }
 
@@ -135,7 +143,6 @@ public class SceneTransition : MonoBehaviour
             Debug.LogError("BallShooterが見つかりません！");
         }
 
-
         // キッカーのアニメーション状態をリセット
         ShooterKick shooterKick =
             FindAnyObjectByType<ShooterKick>();
@@ -143,12 +150,16 @@ public class SceneTransition : MonoBehaviour
         if (shooterKick != null)
         {
             shooterKick.ResetKick();
-            Debug.Log("キッカーのアニメーションをリセットしました！");
+
+            Debug.Log(
+                "キッカーのアニメーションをリセットしました！"
+            );
         }
         else
         {
             Debug.LogError("ShooterKickが見つかりません！");
         }
+
         // カメラをAimに戻す
         if (cameraRig != null)
         {
@@ -156,9 +167,9 @@ public class SceneTransition : MonoBehaviour
         }
 
         // 次のターンの設定
+        // この中で両方のGKとGKSlowDiveが初期状態に戻る
         ApplyTurnSettings();
 
-        // 次のシュートを受け付けられるようにする
         isTransitioning = false;
 
         Debug.Log("ターン交代完了！");

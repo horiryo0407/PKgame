@@ -1,4 +1,4 @@
-
+using System.Collections;
 using UnityEngine;
 
 public class GKBonePoseSave : MonoBehaviour
@@ -16,7 +16,6 @@ public class GKBonePoseSave : MonoBehaviour
 
     private const string Prefix = "GKPose_";
 
-    // 初期状態の保存用
     private Vector3 initialRootPosition;
     private Quaternion initialRootRotation;
     private Vector3 initialHipPosition;
@@ -31,13 +30,13 @@ public class GKBonePoseSave : MonoBehaviour
     private Quaternion initialRThighRotation;
     private Quaternion initialRShinRotation;
 
+    private Coroutine poseCopyCoroutine;
+
     void Awake()
     {
-        // ゲーム開始時の位置を記録
         initialRootPosition = transform.position;
         initialRootRotation = transform.rotation;
 
-        // 関節の初期状態を記録
         if (hip != null)
         {
             initialHipPosition = hip.localPosition;
@@ -68,12 +67,17 @@ public class GKBonePoseSave : MonoBehaviour
         if (rShin != null)
             initialRShinRotation = rShin.localRotation;
 
-        Debug.Log("Didaの初期位置・ポーズを記録しました！");
+        Debug.Log(gameObject.name + "の初期ポーズを記録しました！");
     }
 
-    // 初期状態に戻す
     public void ResetToInitialPose()
     {
+        if (poseCopyCoroutine != null)
+        {
+            StopCoroutine(poseCopyCoroutine);
+            poseCopyCoroutine = null;
+        }
+
         transform.position = initialRootPosition;
         transform.rotation = initialRootRotation;
 
@@ -107,13 +111,13 @@ public class GKBonePoseSave : MonoBehaviour
         if (rShin != null)
             rShin.localRotation = initialRShinRotation;
 
-        Debug.Log("Didaを初期位置・初期ポーズに戻しました！");
+        Debug.Log(gameObject.name + "を初期ポーズに戻しました！");
     }
 
-    // GKの位置とポーズを保存
     public void SavePose()
     {
         Debug.Log("SavePose実行：" + gameObject.name);
+
         Vector3 pos = transform.position;
 
         PlayerPrefs.SetFloat(Prefix + "RootPos_x", pos.x);
@@ -141,16 +145,12 @@ public class GKBonePoseSave : MonoBehaviour
 
         PlayerPrefs.Save();
 
-        Debug.Log("GKポーズ保存実行：" + Time.frameCount);
+        Debug.Log("GKの位置とポーズを保存しました！");
     }
 
-    // 保存したポーズを読み込む
-    // loadRootPosition=falseなら本体の位置は変更しない
-    public void LoadPose(bool loadRootPosition = true)
+    public void LoadPose()
     {
-        // 本体の位置は必要な場合だけ読み込む
-        if (loadRootPosition &&
-            PlayerPrefs.HasKey(Prefix + "RootPos_x"))
+        if (PlayerPrefs.HasKey(Prefix + "RootPos_x"))
         {
             transform.position = new Vector3(
                 PlayerPrefs.GetFloat(Prefix + "RootPos_x"),
@@ -159,7 +159,6 @@ public class GKBonePoseSave : MonoBehaviour
             );
         }
 
-        // 腰の位置
         if (hip != null && PlayerPrefs.HasKey(Prefix + "HipPos_x"))
         {
             hip.localPosition = new Vector3(
@@ -169,7 +168,6 @@ public class GKBonePoseSave : MonoBehaviour
             );
         }
 
-        // 関節の回転
         LoadBone("hip", hip);
         LoadBone("rShldrBend", rShldrBend);
         LoadBone("lShldrBend", lShldrBend);
@@ -180,10 +178,170 @@ public class GKBonePoseSave : MonoBehaviour
         LoadBone("rThighBend", rThighBend);
         LoadBone("rShin", rShin);
 
-        Debug.Log("保存したGKポーズを読み込みました！");
+        Debug.Log(gameObject.name + "が保存ポーズを読み込みました！");
     }
 
-    void SaveBone(string boneName, Transform bone)
+    // 即時コピー（既存機能を残す）
+    public void CopyPoseFrom(GKBonePoseSave source)
+    {
+        if (source == null)
+        {
+            Debug.LogError("コピー元のPose Saveがありません！");
+            return;
+        }
+
+        if (hip != null && source.hip != null)
+        {
+            hip.localPosition = source.hip.localPosition;
+            hip.localRotation = source.hip.localRotation;
+        }
+
+        CopyBone(source.rShldrBend, rShldrBend);
+        CopyBone(source.lShldrBend, lShldrBend);
+        CopyBone(source.rForearmBend, rForearmBend);
+        CopyBone(source.lForearmBend, lForearmBend);
+        CopyBone(source.lThighBend, lThighBend);
+        CopyBone(source.lShin, lShin);
+        CopyBone(source.rThighBend, rThighBend);
+        CopyBone(source.rShin, rShin);
+
+        Debug.Log("Didaのポーズを" + gameObject.name + "にコピーしました！");
+    }
+
+    // 指定時間をかけて滑らかにコピー
+    public void SmoothCopyPoseFrom(
+        GKBonePoseSave source,
+        float duration)
+    {
+        if (source == null)
+        {
+            Debug.LogError("コピー元のPose Saveがありません！");
+            return;
+        }
+
+        if (poseCopyCoroutine != null)
+        {
+            StopCoroutine(poseCopyCoroutine);
+        }
+
+        poseCopyCoroutine =
+            StartCoroutine(SmoothCopyCoroutine(source, duration));
+    }
+
+    private IEnumerator SmoothCopyCoroutine(
+        GKBonePoseSave source,
+        float duration)
+    {
+        Transform[] targetBones = GetBones();
+        Transform[] sourceBones = source.GetBones();
+
+        Quaternion[] startRotations =
+            new Quaternion[targetBones.Length];
+
+        Quaternion[] targetRotations =
+            new Quaternion[targetBones.Length];
+
+        for (int i = 0; i < targetBones.Length; i++)
+        {
+            if (targetBones[i] != null && sourceBones[i] != null)
+            {
+                startRotations[i] = targetBones[i].localRotation;
+                targetRotations[i] = sourceBones[i].localRotation;
+            }
+        }
+
+        Vector3 startHipPosition =
+            hip != null ? hip.localPosition : Vector3.zero;
+
+        Vector3 targetHipPosition =
+            source.hip != null
+                ? source.hip.localPosition
+                : startHipPosition;
+
+        float elapsed = 0f;
+        duration = Mathf.Max(0.01f, duration);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+
+            float t = Mathf.Clamp01(elapsed / duration);
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+            if (hip != null && source.hip != null)
+            {
+                hip.localPosition = Vector3.Lerp(
+                    startHipPosition,
+                    targetHipPosition,
+                    smoothT
+                );
+            }
+
+            for (int i = 0; i < targetBones.Length; i++)
+            {
+                if (targetBones[i] == null ||
+                    sourceBones[i] == null)
+                {
+                    continue;
+                }
+
+                targetBones[i].localRotation =
+                    Quaternion.Slerp(
+                        startRotations[i],
+                        targetRotations[i],
+                        smoothT
+                    );
+            }
+
+            yield return null;
+        }
+
+        if (hip != null && source.hip != null)
+            hip.localPosition = targetHipPosition;
+
+        for (int i = 0; i < targetBones.Length; i++)
+        {
+            if (targetBones[i] != null &&
+                sourceBones[i] != null)
+            {
+                targetBones[i].localRotation =
+                    targetRotations[i];
+            }
+        }
+
+        poseCopyCoroutine = null;
+
+        Debug.Log(
+            "Didaのポーズを" + gameObject.name +
+            "へ滑らかに反映しました！"
+        );
+    }
+
+    private Transform[] GetBones()
+    {
+        return new Transform[]
+        {
+            hip,
+            rShldrBend,
+            lShldrBend,
+            rForearmBend,
+            lForearmBend,
+            lThighBend,
+            lShin,
+            rThighBend,
+            rShin
+        };
+    }
+
+    private void CopyBone(Transform source, Transform target)
+    {
+        if (source == null || target == null)
+            return;
+
+        target.localRotation = source.localRotation;
+    }
+
+    private void SaveBone(string boneName, Transform bone)
     {
         if (bone == null)
             return;
@@ -197,7 +355,7 @@ public class GKBonePoseSave : MonoBehaviour
         PlayerPrefs.SetFloat(key + "_w", rot.w);
     }
 
-    void LoadBone(string boneName, Transform bone)
+    private void LoadBone(string boneName, Transform bone)
     {
         if (bone == null)
             return;

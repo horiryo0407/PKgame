@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -29,7 +28,7 @@ public class GKPositionTimer : MonoBehaviour
         remainingTime = limitTime;
         isFinished = false;
 
-        // Didaを初期位置・初期ポーズに戻す
+        // Didaを初期状態に戻す
         if (poseSave != null)
         {
             poseSave.ResetToInitialPose();
@@ -39,17 +38,7 @@ public class GKPositionTimer : MonoBehaviour
             Debug.LogError("DidaのPose Saveが未設定です！");
         }
 
-        // 保存した最新ポーズをKKdidaに反映
-        if (kickerPoseSave != null)
-        {
-            kickerPoseSave.LoadPose(false);
-        }
-        else
-        {
-            Debug.LogError("KKdidaのPose Saveが未設定です！");
-        }
-
-        // KKdidaを初期位置・初期ポーズに戻す
+        // KKdidaを初期状態に戻す
         if (kickerPoseSave != null)
         {
             kickerPoseSave.ResetToInitialPose();
@@ -59,9 +48,17 @@ public class GKPositionTimer : MonoBehaviour
             Debug.LogError("KKdidaのPose Saveが未設定です！");
         }
 
+        // GKSlowDiveの状態をリセット
+        GKSlowDive slowDive =
+            FindAnyObjectByType<GKSlowDive>();
+
+        if (slowDive != null)
+        {
+            slowDive.ResetDiveState();
+        }
+
         UpdateTimerText();
 
-        // GK操作を有効にする
         if (gkMouseBoneDrag != null)
         {
             gkMouseBoneDrag.SetEditing(true);
@@ -71,7 +68,6 @@ public class GKPositionTimer : MonoBehaviour
             Debug.LogError("DidaのGKMouseBoneDragが未設定です！");
         }
 
-        // キッカー操作を無効にする
         BallShooter shooter =
             FindAnyObjectByType<BallShooter>();
 
@@ -97,7 +93,6 @@ public class GKPositionTimer : MonoBehaviour
 
             UpdateTimerText();
 
-            // Didaのポーズを保存
             if (poseSave != null)
             {
                 poseSave.SavePose();
@@ -108,13 +103,11 @@ public class GKPositionTimer : MonoBehaviour
                 return;
             }
 
-            // GK操作を無効にする
             if (gkMouseBoneDrag != null)
             {
                 gkMouseBoneDrag.SetEditing(false);
             }
 
-            // キッカー操作を有効にする
             BallShooter shooter =
                 FindAnyObjectByType<BallShooter>();
 
@@ -131,6 +124,40 @@ public class GKPositionTimer : MonoBehaviour
         }
     }
 
+    // 既存の即時コピー機能
+    public void ApplyKickerPose()
+    {
+        if (poseSave == null || kickerPoseSave == null)
+        {
+            Debug.LogError("GKポーズ保存の参照がありません！");
+            return;
+        }
+
+        kickerPoseSave.CopyPoseFrom(poseSave);
+
+        Debug.Log("KKdidaにポーズを即時反映しました！");
+    }
+
+    // 指定時間をかけてKKdidaにポーズを反映
+    public void ApplyKickerPoseSmooth(float duration)
+    {
+        if (poseSave == null || kickerPoseSave == null)
+        {
+            Debug.LogError("GKポーズ保存の参照がありません！");
+            return;
+        }
+
+        kickerPoseSave.SmoothCopyPoseFrom(
+            poseSave,
+            duration
+        );
+
+        Debug.Log(
+            "KKdidaのポーズを" + duration +
+            "秒かけて変更します！"
+        );
+    }
+
     void UpdateTimerText()
     {
         if (timerText != null)
@@ -145,7 +172,9 @@ public class GKPositionTimer : MonoBehaviour
                 remainingTime / limitTime;
 
             timerGauge.color =
-                remainingTime <= 3f ? Color.red : Color.white;
+                remainingTime <= 3f
+                    ? Color.red
+                    : Color.white;
         }
     }
 }
