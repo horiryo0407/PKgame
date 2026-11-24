@@ -2299,8 +2299,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKPositionTimer
   limitTime: 10
-  timerText: {fileID: 1277374566}
-  timerGauge: {fileID: 1646012412}
+  timerText: {fileID: 1439741368}
+  timerGauge: {fileID: 24587255}
   gkMouseBoneDrag: {fileID: 130682462}
   poseSave: {fileID: 130682461}
   kickerPoseSave: {fileID: 5885942}
@@ -5690,7 +5690,7 @@ Canvas:
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
-  m_TargetDisplay: 0
+  m_TargetDisplay: 1
 --- !u!224 &1006468205
 RectTransform:
   m_ObjectHideFlags: 0
