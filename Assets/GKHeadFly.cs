@@ -18,6 +18,11 @@ public class GKHeadFly : MonoBehaviour
     private Vector3 followPositionOffset;
     private Quaternion followRotationOffset;
 
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
+
+    private bool initialized = false;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,6 +33,9 @@ public class GKHeadFly : MonoBehaviour
             return;
         }
 
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+
         followPositionOffset =
             Quaternion.Inverse(originalHead.rotation) *
             (transform.position - originalHead.position);
@@ -37,6 +45,7 @@ public class GKHeadFly : MonoBehaviour
             transform.rotation;
 
         rb.isKinematic = true;
+        initialized = true;
     }
 
     private void LateUpdate()
@@ -69,5 +78,23 @@ public class GKHeadFly : MonoBehaviour
         rb.AddForce(force, ForceMode.Impulse);
 
         Debug.Log("頭が吹っ飛びました！");
+    }
+
+    public void ResetHead()
+    {
+        if (!initialized || rb == null)
+            return;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.isKinematic = true;
+
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        detached = false;
+
+        Debug.Log("頭の飛行状態をリセットしました！");
     }
 }

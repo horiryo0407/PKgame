@@ -84,7 +84,7 @@ public class SceneTransition : MonoBehaviour
 
         Debug.Log("シュートを検知しました！");
 
-        // ここではKKdidaにポーズをコピーしない
+        // ここではGKにポーズをコピーしない
         // GKSlowDiveの反応ディレイ終了後にポーズを反映する
 
         StartCoroutine(TransitionAfterShot());
@@ -166,8 +166,20 @@ public class SceneTransition : MonoBehaviour
             cameraRig.StartAim();
         }
 
+        // 1P・2P両方の頭を元に戻す
+        GKHeadFly[] heads =
+            FindObjectsByType<GKHeadFly>(
+                FindObjectsSortMode.None
+            );
+
+        foreach (GKHeadFly head in heads)
+        {
+            head.ResetHead();
+        }
+
+        Debug.Log("両プレイヤーの頭をリセットしました！");
+
         // 次のターンの設定
-        // この中で両方のGKとGKSlowDiveが初期状態に戻る
         ApplyTurnSettings();
 
         isTransitioning = false;
