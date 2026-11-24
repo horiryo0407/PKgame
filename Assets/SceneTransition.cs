@@ -9,6 +9,9 @@ public class SceneTransition : MonoBehaviour
     [Header("シュート後の待ち時間")]
     [SerializeField] private float transitionDelay = 5f;
 
+    [Header("ボールリセット後の待機時間")]
+    [SerializeField] private float timerStartDelay = 0.5f;
+
     // 0 = プレイヤー1
     // 1 = プレイヤー2
     private static int currentPlayer = 0;
@@ -43,11 +46,25 @@ public class SceneTransition : MonoBehaviour
         {
             cameraRig.StartAim();
         }
+
+        // 初回ゲーム開始時もGKタイマーを開始
+        StartCoroutine(StartInitialGKTimer());
+    }
+
+    // 初回ゲーム開始時のタイマー処理
+    private IEnumerator StartInitialGKTimer()
+    {
+        yield return new WaitForSecondsRealtime(
+            timerStartDelay
+        );
+
+        StartGKTimer();
     }
 
     // 現在のターンに合わせて設定
     private void ApplyTurnSettings()
     {
+        // プレイヤーの色を変更
         TurnSkinManager skin =
             FindAnyObjectByType<TurnSkinManager>();
 
@@ -56,22 +73,49 @@ public class SceneTransition : MonoBehaviour
             skin.ApplyTurn(currentPlayer + 1);
         }
 
-        GKPositionTimer timer =
-            FindAnyObjectByType<GKPositionTimer>();
+        // GKPoseOnSpaceの適用状態をリセット
+        GKPoseOnSpace poseOnSpace =
+            FindAnyObjectByType<GKPoseOnSpace>();
 
-        if (timer != null)
+        if (poseOnSpace != null)
         {
-            timer.StartTimer();
+            poseOnSpace.ResetPoseApplied();
+
+            Debug.Log(
+                "GKPoseOnSpaceをリセットしました！"
+            );
         }
         else
         {
-            Debug.LogError("GKPositionTimerが見つかりません！");
+            Debug.LogWarning(
+                "GKPoseOnSpaceが見つかりません！"
+            );
         }
 
         Debug.Log(
             "キッカー：プレイヤー" + (currentPlayer + 1) +
             " / GK操作：プレイヤー" + (2 - currentPlayer)
         );
+    }
+
+    // GKタイマーを開始
+    private void StartGKTimer()
+    {
+        GKPositionTimer timer =
+            FindAnyObjectByType<GKPositionTimer>();
+
+        if (timer != null)
+        {
+            timer.StartTimer();
+
+            Debug.Log("GKタイマーを開始しました！");
+        }
+        else
+        {
+            Debug.LogError(
+                "GKPositionTimerが見つかりません！"
+            );
+        }
     }
 
     // シュートした瞬間に呼び出す
@@ -83,9 +127,6 @@ public class SceneTransition : MonoBehaviour
         isTransitioning = true;
 
         Debug.Log("シュートを検知しました！");
-
-        // ここではGKにポーズをコピーしない
-        // GKSlowDiveの反応ディレイ終了後にポーズを反映する
 
         StartCoroutine(TransitionAfterShot());
     }
@@ -117,6 +158,7 @@ public class SceneTransition : MonoBehaviour
         if (ScoreManager.Instance.IsGameFinished)
         {
             Debug.Log("10投終了！試合終了です！");
+            isTransitioning = false;
             yield break;
         }
 
@@ -177,10 +219,20 @@ public class SceneTransition : MonoBehaviour
             head.ResetHead();
         }
 
-        Debug.Log("両プレイヤーの頭をリセットしました！");
+        Debug.Log(
+            "両プレイヤーの頭をリセットしました！"
+        );
 
-        // 次のターンの設定
+        // 次のターンの色・ポーズ適用状態を設定
         ApplyTurnSettings();
+
+        // ボールなどのリセットが終わってから待つ
+        yield return new WaitForSecondsRealtime(
+            timerStartDelay
+        );
+
+        // 次のGKタイマーを開始
+        StartGKTimer();
 
         isTransitioning = false;
 
