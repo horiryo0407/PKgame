@@ -30,6 +30,7 @@ public class GKSlowDive : MonoBehaviour
     private bool targetCalculated;
 
     private float diveTimer;
+    private Coroutine diveCoroutine;
 
     void Start()
     {
@@ -41,13 +42,17 @@ public class GKSlowDive : MonoBehaviour
         if (ballBody == null || goalPlane == null)
         {
             Debug.LogWarning(
-                "GKSlowDive：Ball BodyとGoal Planeを設定してください。");
+                "GKSlowDive：Ball BodyとGoal Planeを設定してください。"
+            );
         }
     }
 
     void Update()
     {
-        if (diveStarted || ballBody == null || goalPlane == null)
+        if (diveStarted ||
+            ballBody == null ||
+            goalPlane == null ||
+            goalkeeperRoot == null)
         {
             return;
         }
@@ -62,7 +67,8 @@ public class GKSlowDive : MonoBehaviour
             if (targetCalculated)
             {
                 diveStarted = true;
-                StartCoroutine(BeginDiveAfterDelay());
+                diveCoroutine =
+                    StartCoroutine(BeginDiveAfterDelay());
             }
         }
     }
@@ -75,6 +81,21 @@ public class GKSlowDive : MonoBehaviour
         yield return new WaitForSeconds(reactionDelay);
 
         Debug.Log("GK：飛び込み開始！");
+
+        // 反応ディレイ終了後にKKdidaのポーズを滑らかに変更
+        GKPositionTimer timer =
+            FindAnyObjectByType<GKPositionTimer>();
+
+        if (timer != null)
+        {
+            timer.ApplyKickerPoseSmooth(diveDuration);
+        }
+        else
+        {
+            Debug.LogError(
+                "GKSlowDive：GKPositionTimerが見つかりません！"
+            );
+        }
 
         diveTimer = 0f;
 
@@ -94,6 +115,8 @@ public class GKSlowDive : MonoBehaviour
         }
 
         goalkeeperRoot.position = targetPosition;
+
+        diveCoroutine = null;
     }
 
     void CalculateTarget()
@@ -106,10 +129,13 @@ public class GKSlowDive : MonoBehaviour
         float denominator = Vector3.Dot(ballVelocity, normal);
 
         targetPosition = startPosition;
+        targetCalculated = false;
 
         if (Mathf.Abs(denominator) <= 0.001f)
         {
-            Debug.LogWarning("GKSlowDive：ボールの進行方向を計算できません。");
+            Debug.LogWarning(
+                "GKSlowDive：ボールの進行方向を計算できません。"
+            );
             return;
         }
 
@@ -122,7 +148,9 @@ public class GKSlowDive : MonoBehaviour
 
         if (timeToPlane <= 0f)
         {
-            Debug.LogWarning("GKSlowDive：ゴール面への到達位置を計算できません。");
+            Debug.LogWarning(
+                "GKSlowDive：ゴール面への到達位置を計算できません。"
+            );
             return;
         }
 
@@ -154,5 +182,21 @@ public class GKSlowDive : MonoBehaviour
             + goalPlane.up * vertical;
 
         targetCalculated = true;
+    }
+
+    // 次のシュートに備えて状態をリセット
+    public void ResetDiveState()
+    {
+        if (diveCoroutine != null)
+        {
+            StopCoroutine(diveCoroutine);
+            diveCoroutine = null;
+        }
+
+        diveStarted = false;
+        targetCalculated = false;
+        diveTimer = 0f;
+
+        Debug.Log("GKSlowDiveの状態をリセットしました！");
     }
 }
