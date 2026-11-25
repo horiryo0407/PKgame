@@ -23,7 +23,9 @@ public class GKPoseOnSpace : MonoBehaviour
     public float startDelay = 0.3f;
 
     private const string Prefix = "GKPose_";
+
     private bool poseApplied = false;
+    private Coroutine poseCoroutine;
 
     void Update()
     {
@@ -43,7 +45,10 @@ public class GKPoseOnSpace : MonoBehaviour
             if (PlayerPrefs.HasKey(Prefix + "RootPos_x") &&
                 PlayerPrefs.HasKey(Prefix + "hip_w"))
             {
-                StartCoroutine(MoveToSavedPose());
+                poseApplied = true;
+
+                poseCoroutine =
+                    StartCoroutine(MoveToSavedPose());
             }
             else
             {
@@ -56,9 +61,6 @@ public class GKPoseOnSpace : MonoBehaviour
 
     IEnumerator MoveToSavedPose()
     {
-        poseApplied = true;
-
-        // 指定した時間だけ待つ
         if (startDelay > 0f)
         {
             yield return new WaitForSeconds(startDelay);
@@ -97,14 +99,18 @@ public class GKPoseOnSpace : MonoBehaviour
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
             transform.position = Vector3.Lerp(
-                startPosition, targetPosition, smoothT
+                startPosition,
+                targetPosition,
+                smoothT
             );
 
             if (hip != null &&
                 PlayerPrefs.HasKey(Prefix + "HipPos_x"))
             {
                 hip.localPosition = Vector3.Lerp(
-                    startHipPosition, targetHipPosition, smoothT
+                    startHipPosition,
+                    targetHipPosition,
+                    smoothT
                 );
             }
 
@@ -136,6 +142,8 @@ public class GKPoseOnSpace : MonoBehaviour
             if (bones[i] != null)
                 bones[i].localRotation = targetRotations[i];
         }
+
+        poseCoroutine = null;
 
         Debug.Log("GKが保存した位置とポーズに移動しました！");
     }
@@ -197,5 +205,30 @@ public class GKPoseOnSpace : MonoBehaviour
             PlayerPrefs.GetFloat(key + "_z"),
             PlayerPrefs.GetFloat(key + "_w")
         );
+    }
+
+    // 次のターンに備えてリセット
+    public void ResetPoseApplied()
+    {
+        if (poseCoroutine != null)
+        {
+            StopCoroutine(poseCoroutine);
+            poseCoroutine = null;
+        }
+
+        poseApplied = false;
+
+        Debug.Log(
+            "GKPoseOnSpace：次のターンのポーズ適用を許可しました！"
+        );
+    }
+
+    void OnDisable()
+    {
+        if (poseCoroutine != null)
+        {
+            StopCoroutine(poseCoroutine);
+            poseCoroutine = null;
+        }
     }
 }

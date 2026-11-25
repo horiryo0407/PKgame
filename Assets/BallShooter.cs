@@ -369,34 +369,78 @@ public class BallShooter : MonoBehaviour
 
     public void ResetBall()
     {
-        if (ballRigidbody == null) return;
+        if (ballRigidbody == null)
+        {
+            Debug.LogError("ボールのRigidbodyがありません！");
+            return;
+        }
 
+        // ボールの描画を一時的に消す
+        Renderer[] renderers =
+            ballRigidbody.GetComponentsInChildren<Renderer>();
+
+        foreach (Renderer r in renderers)
+        {
+            r.enabled = false;
+        }
+
+        // 物理演算を一時停止
+        ballRigidbody.isKinematic = true;
         ballRigidbody.linearVelocity = Vector3.zero;
         ballRigidbody.angularVelocity = Vector3.zero;
 
+        // 強制的に初期位置へ戻す
         ballRigidbody.position = initialBallPosition;
         ballRigidbody.rotation = initialBallRotation;
 
+        ballRigidbody.transform.position = initialBallPosition;
+        ballRigidbody.transform.rotation = initialBallRotation;
+
+        Physics.SyncTransforms();
+
+        // 物理設定を元に戻す
         ballRigidbody.useGravity = initialUseGravity;
+        ballRigidbody.collisionDetectionMode = initialCollisionMode;
         ballRigidbody.isKinematic = initialIsKinematic;
 
-        ballRigidbody.collisionDetectionMode =
-            initialCollisionMode;
-
+        ballRigidbody.linearVelocity = Vector3.zero;
+        ballRigidbody.angularVelocity = Vector3.zero;
         ballRigidbody.Sleep();
 
+        // 描画を戻す
+        foreach (Renderer r in renderers)
+        {
+            r.enabled = true;
+        }
+
+        // シュート状態をリセット
         hasShot = false;
         aimInputLocked = false;
 
-        // AimRingとAimPointを初期位置に戻す
+        // 照準を初期位置へ戻す
         aimOffset = initialAimOffset;
         UpdateAimPosition();
 
         if (ringObject != null)
             ringObject.gameObject.SetActive(true);
 
+        // 次のシュート用に得点判定を解除
+        BallGKHitDetector hitDetector =
+            ballRigidbody.GetComponent<BallGKHitDetector>();
+
+        if (hitDetector != null)
+        {
+            hitDetector.ResetForNextShot();
+            Debug.Log("得点判定をリセットしました！");
+        }
+        else
+        {
+            Debug.LogError("BallGKHitDetectorが見つかりません！");
+        }
+
+        // キッカー操作は禁止したまま
         SetShooterControl(false);
 
-        Debug.Log("ボールとAimRingを初期位置に戻しました！");
+        Debug.Log("ボールを強制的に初期位置へ戻しました！");
     }
 }

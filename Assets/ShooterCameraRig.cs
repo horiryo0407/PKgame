@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class ShooterCameraRig : MonoBehaviour
@@ -5,38 +6,61 @@ public class ShooterCameraRig : MonoBehaviour
     public enum Phase { Aim, Kick, Follow }
 
     [Header("位置の目印")]
-    [SerializeField] private Transform aimPose;   // 斜め後ろ
-    [SerializeField] private Transform kickPose;  // シューターの正面
+    [SerializeField] private Transform aimPose;
+    [SerializeField] private Transform kickPose;
 
     [Header("ボール")]
     [SerializeField] private Transform ball;
-    [SerializeField] private Transform lookTarget; // 追従先（ゴールなど）
+    [SerializeField] private Transform lookTarget;
 
     [Header("追従の設定")]
-    [SerializeField] private float followDistance = 0.1f; // ボールがこれだけ進んだら追従する
-    [SerializeField] private float followDelay = 1f;    // キックから何秒で追従に切り替えるか
-    [SerializeField] private float followBack = 2f;       // ボールの何m後ろに付くか
-    [SerializeField] private float followHeight = 0.5f;   // ボールより何m上か
+    [SerializeField] private float followDistance = 0.1f;
+    [SerializeField] private float followDelay = 1f;
+    [SerializeField] private float followBack = 2f;
+    [SerializeField] private float followHeight = 0.5f;
+
     private Vector3 lastDir = Vector3.forward;
 
     [Header("切り替えの滑らかさ")]
     [SerializeField] private float smooth = 8f;
 
     public Phase Current { get; private set; } = Phase.Aim;
+
     private Vector3 ballStartPos;
     private float kickStartTime;
 
-    void Start() { StartAim(); }
+    void Start()
+    {
+        StartAim();
+    }
 
-    // シュート位置を決め始めるときに呼ぶ
+    // 次のターンの照準カメラに戻す
     public void StartAim()
     {
         Current = Phase.Aim;
+
+        if (aimPose != null)
+        {
+            transform.SetPositionAndRotation(
+                aimPose.position,
+                aimPose.rotation
+            );
+        }
+
+        lastDir = Vector3.forward;
+
+        Debug.Log("カメラをAimの初期位置に戻しました！");
     }
 
     // シュートを決定したときに呼ぶ
     public void StartKick()
     {
+        if (ball == null)
+        {
+            Debug.LogWarning("CameraRigのBallが設定されていません！");
+            return;
+        }
+
         ballStartPos = ball.position;
         kickStartTime = Time.unscaledTime;
 
@@ -44,7 +68,9 @@ public class ShooterCameraRig : MonoBehaviour
         {
             Vector3 toGoal = lookTarget.position - ball.position;
             toGoal.y = 0f;
-            if (toGoal.sqrMagnitude > 0.0001f) lastDir = toGoal.normalized;
+
+            if (toGoal.sqrMagnitude > 0.0001f)
+                lastDir = toGoal.normalized;
         }
 
         Current = Phase.Kick;
@@ -52,23 +78,35 @@ public class ShooterCameraRig : MonoBehaviour
 
     void LateUpdate()
     {
+        if (aimPose == null || kickPose == null || ball == null)
+            return;
+
         Vector3 targetPos;
         Quaternion targetRot;
 
         switch (Current)
         {
             case Phase.Aim:
-                targetPos = aimPose.position;
-                targetRot = aimPose.rotation;
-                break;
+                // Aim中は照準カメラの位置と角度を維持
+                transform.SetPositionAndRotation(
+                    aimPose.position,
+                    aimPose.rotation
+                );
+
+                return;
 
             case Phase.Kick:
                 targetPos = kickPose.position;
                 targetRot = kickPose.rotation;
 
-              
-                bool byDistance = Vector3.Distance(ball.position, ballStartPos) >= followDistance;
-                bool byTime = followDelay > 0f && Time.unscaledTime - kickStartTime >= followDelay;
+                bool byDistance =
+                    Vector3.Distance(ball.position, ballStartPos)
+                    >= followDistance;
+
+                bool byTime =
+                    followDelay > 0f &&
+                    Time.unscaledTime - kickStartTime >= followDelay;
+
                 if (byDistance || byTime)
                 {
                     Current = Phase.Follow;
@@ -78,14 +116,20 @@ public class ShooterCameraRig : MonoBehaviour
             default:
                 Vector3 travel = ball.position - ballStartPos;
                 travel.y = 0f;
+
                 if (travel.sqrMagnitude > 0.0001f)
-                {
                     lastDir = travel.normalized;
-                }
-                targetPos = ball.position - lastDir * followBack + Vector3.up * followHeight;
-                Transform look = lookTarget != null ? lookTarget : ball;
+
+                targetPos =
+                    ball.position -
+                    lastDir * followBack +
+                    Vector3.up * followHeight;
+
+                Transform look =
+                    lookTarget != null ? lookTarget : ball;
 
                 Vector3 dir = look.position - targetPos;
+
                 targetRot = dir.sqrMagnitude > 0.0001f
                     ? Quaternion.LookRotation(dir)
                     : transform.rotation;
@@ -98,15 +142,26 @@ public class ShooterCameraRig : MonoBehaviour
         }
         else
         {
-            float t = 1f - Mathf.Exp(-smooth * Time.unscaledDeltaTime);
-            transform.position = Vector3.Lerp(transform.position, targetPos, t);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, t);
+            float t =
+                1f - Mathf.Exp(-smooth * Time.unscaledDeltaTime);
+
+            transform.position =
+                Vector3.Lerp(transform.position, targetPos, t);
+
+            transform.rotation =
+                Quaternion.Slerp(transform.rotation, targetRot, t);
         }
     }
 
     [ContextMenu("Test Aim")]
-    private void TestAim() { StartAim(); }
+    private void TestAim()
+    {
+        StartAim();
+    }
 
     [ContextMenu("Test Kick")]
-    private void TestKick() { StartKick(); }
+    private void TestKick()
+    {
+        StartKick();
+    }
 }
