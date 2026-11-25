@@ -11165,7 +11165,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneTransition
   cameraRig: {fileID: 0}
+  kkCamera: {fileID: 786441258}
+  gkCamera: {fileID: 1169024032}
   transitionDelay: 10
+  timerStartDelay: 0.5
 --- !u!4 &1656497319
 Transform:
   m_ObjectHideFlags: 0
