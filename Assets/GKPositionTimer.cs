@@ -8,8 +8,8 @@ public class GKPositionTimer : MonoBehaviour
     public float limitTime = 10f;
 
     [Header("時間表示")]
-    public TMP_Text timerText;
-    public Image timerGauge;
+    public TMP_Text[] timerTexts;
+    public Image[] timerGauges;
 
     [Header("GK操作")]
     public GKMouseBoneDrag gkMouseBoneDrag;
@@ -20,6 +20,14 @@ public class GKPositionTimer : MonoBehaviour
     [Header("キッカー側GKポーズ保存")]
     public GKBonePoseSave kickerPoseSave;
 
+    [Header("タイマーのCanvas")]
+    public GameObject[] timerCanvases;
+
+    void HideTimer()
+    {
+        foreach (var c in timerCanvases)
+            if (c != null) c.SetActive(false);
+    }
     private float remainingTime;
     private bool isFinished = true;
 
@@ -91,6 +99,9 @@ public class GKPositionTimer : MonoBehaviour
             remainingTime = 0f;
             isFinished = true;
 
+
+            HideTimer();
+
             UpdateTimerText();
 
             if (poseSave != null)
@@ -160,21 +171,12 @@ public class GKPositionTimer : MonoBehaviour
 
     void UpdateTimerText()
     {
-        if (timerText != null)
-        {
-            timerText.text =
-                Mathf.CeilToInt(remainingTime).ToString();
-        }
+        string s = Mathf.CeilToInt(remainingTime).ToString();
+        foreach (var t in timerTexts)
+            if (t != null) t.text = s;
 
-        if (timerGauge != null)
-        {
-            timerGauge.fillAmount =
-                remainingTime / limitTime;
-
-            timerGauge.color =
-                remainingTime <= 3f
-                    ? Color.red
-                    : Color.white;
-        }
+        float f = remainingTime / limitTime;
+        foreach (var g in timerGauges)
+            if (g != null) g.fillAmount = f;
     }
 }
