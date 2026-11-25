@@ -11,6 +11,11 @@ public class SceneTransition : MonoBehaviour
     [SerializeField] private Camera kkCamera;
     [SerializeField] private Camera gkCamera;
 
+    [Header("キッカー側のUI表示")]
+    [SerializeField] private Canvas kkSideCanvas;
+    [Header("キーパー側のUI表示")]
+    [SerializeField] private Canvas gkSideCanvas;
+
     [Header("シュート後の待ち時間")]
     [SerializeField] private float transitionDelay = 5f;
 
@@ -111,6 +116,18 @@ public class SceneTransition : MonoBehaviour
             kkCamera.targetDisplay = 1;
             gkCamera.targetDisplay = 0;
         }
+
+
+        if (kkSideCanvas != null)//UI入れ替え
+        {
+            kkSideCanvas.targetDisplay = kkCamera.targetDisplay;
+        }
+
+        if (gkSideCanvas != null)
+        {
+            gkSideCanvas.targetDisplay = gkCamera.targetDisplay;
+        }
+
 
         Debug.Log(
             "KKカメラ Display " +

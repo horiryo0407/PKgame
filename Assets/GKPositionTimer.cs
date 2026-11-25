@@ -23,10 +23,25 @@ public class GKPositionTimer : MonoBehaviour
     [Header("タイマーのCanvas")]
     public GameObject[] timerCanvases;
 
+    [Header("キーパー準備中の表示")]
+    public GameObject[] waitingObjects;
+
     void HideTimer()
     {
         foreach (var c in timerCanvases)
             if (c != null) c.SetActive(false);
+
+        foreach (var w in waitingObjects)
+            if (w != null) w.SetActive(false);
+    }
+
+    void ShowTimer()
+    {
+        foreach (var c in timerCanvases)
+            if (c != null) c.SetActive(true);
+
+        foreach (var w in waitingObjects)
+            if (w != null) w.SetActive(true);
     }
     private float remainingTime;
     private bool isFinished = true;
@@ -35,6 +50,8 @@ public class GKPositionTimer : MonoBehaviour
     {
         remainingTime = limitTime;
         isFinished = false;
+
+        ShowTimer();
 
         // Didaを初期状態に戻す
         if (poseSave != null)
