@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 
@@ -5,6 +6,10 @@ public class SceneTransition : MonoBehaviour
 {
     [Header("カメラ")]
     [SerializeField] private ShooterCameraRig cameraRig;
+
+    [Header("役割交代用カメラ")]
+    [SerializeField] private Camera kkCamera;
+    [SerializeField] private Camera gkCamera;
 
     [Header("シュート後の待ち時間")]
     [SerializeField] private float transitionDelay = 5f;
@@ -19,6 +24,18 @@ public class SceneTransition : MonoBehaviour
     public static int CurrentPlayer => currentPlayer;
 
     private bool isTransitioning = false;
+
+    // GKカメラをKKカメラに同期する状態
+    private bool syncGKCameraToKK = false;
+
+    // 同期前のGKカメラの位置・角度
+    private Vector3 originalGKCameraPosition;
+    private Quaternion originalGKCameraRotation;
+
+    // 同期前のGKカメラのCulling Mask
+    private int originalGKCameraMask;
+
+    private bool originalCameraSaved = false;
 
     [RuntimeInitializeOnLoadMethod(
         RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -42,6 +59,9 @@ public class SceneTransition : MonoBehaviour
 
         ApplyTurnSettings();
 
+        // カメラの表示先を設定
+        ApplyCameraDisplays();
+
         if (cameraRig != null)
         {
             cameraRig.StartAim();
@@ -49,6 +69,55 @@ public class SceneTransition : MonoBehaviour
 
         // 初回ゲーム開始時もGKタイマーを開始
         StartCoroutine(StartInitialGKTimer());
+    }
+
+    // GKカメラをKKカメラに追従させる
+    private void LateUpdate()
+    {
+        if (!syncGKCameraToKK)
+            return;
+
+        if (kkCamera == null || gkCamera == null)
+            return;
+
+        // GKカメラの位置をKKカメラに合わせる
+        gkCamera.transform.position =
+            kkCamera.transform.position;
+
+        // GKカメラの角度をKKカメラに合わせる
+        gkCamera.transform.rotation =
+            kkCamera.transform.rotation;
+    }
+
+    // カメラの表示先を切り替える
+    private void ApplyCameraDisplays()
+    {
+        if (kkCamera == null || gkCamera == null)
+        {
+            Debug.LogError(
+                "KKカメラまたはGKカメラが設定されていません！");
+            return;
+        }
+
+        // プレイヤー1のターン
+        if (currentPlayer == 0)
+        {
+            kkCamera.targetDisplay = 0;
+            gkCamera.targetDisplay = 1;
+        }
+        // プレイヤー2のターン
+        else
+        {
+            kkCamera.targetDisplay = 1;
+            gkCamera.targetDisplay = 0;
+        }
+
+        Debug.Log(
+            "KKカメラ Display " +
+            (kkCamera.targetDisplay + 1) +
+            " / GKカメラ Display " +
+            (gkCamera.targetDisplay + 1)
+        );
     }
 
     // 初回ゲーム開始時のタイマー処理
@@ -126,17 +195,85 @@ public class SceneTransition : MonoBehaviour
 
         isTransitioning = true;
 
+        // 結果表示用のカメラ設定
+        StartResultCamera();
+
         Debug.Log("シュートを検知しました！");
 
         StartCoroutine(TransitionAfterShot());
     }
 
+    // 結果表示用のカメラに切り替える
+    private void StartResultCamera()
+    {
+        if (kkCamera == null || gkCamera == null)
+        {
+            Debug.LogError(
+                "KKカメラまたはGKカメラが設定されていません！"
+            );
+            return;
+        }
+
+        // GKカメラの元の設定を保存
+        originalGKCameraPosition =
+            gkCamera.transform.position;
+
+        originalGKCameraRotation =
+            gkCamera.transform.rotation;
+
+        originalGKCameraMask =
+            gkCamera.cullingMask;
+
+        originalCameraSaved = true;
+
+        // 結果確認中はKKカメラと同じ対象を映す
+        gkCamera.cullingMask =
+            kkCamera.cullingMask;
+
+        // GKカメラをKKカメラに同期開始
+        syncGKCameraToKK = true;
+
+        Debug.Log(
+            "結果表示開始！GKカメラをKKカメラと同じ描画設定にしました！"
+        );
+    }
+
+    // GKカメラを通常状態に戻す
+    private void RestoreGKCamera()
+    {
+        if (gkCamera == null || !originalCameraSaved)
+            return;
+
+        // カメラの同期を停止
+        syncGKCameraToKK = false;
+
+        // 元の位置に戻す
+        gkCamera.transform.position =
+            originalGKCameraPosition;
+
+        // 元の角度に戻す
+        gkCamera.transform.rotation =
+            originalGKCameraRotation;
+
+        // 元のCulling Maskに戻す
+        gkCamera.cullingMask =
+            originalGKCameraMask;
+
+        originalCameraSaved = false;
+
+        Debug.Log(
+            "GKカメラを通常状態に戻しました！"
+        );
+    }
+
+    // シュート後のターン交代処理
     private IEnumerator TransitionAfterShot()
     {
         Debug.Log(
             transitionDelay + "秒後にターンを交代します。"
         );
 
+        // 結果確認のため待機
         yield return new WaitForSecondsRealtime(
             transitionDelay
         );
@@ -144,6 +281,9 @@ public class SceneTransition : MonoBehaviour
         if (ScoreManager.Instance == null)
         {
             Debug.LogError("ScoreManagerが見つかりません！");
+
+            RestoreGKCamera();
+
             isTransitioning = false;
             yield break;
         }
@@ -158,9 +298,16 @@ public class SceneTransition : MonoBehaviour
         if (ScoreManager.Instance.IsGameFinished)
         {
             Debug.Log("10投終了！試合終了です！");
+
+            // 最終結果を両画面に残す
+            // GKカメラの同期と描画設定は維持する
+
             isTransitioning = false;
             yield break;
         }
+
+        // GKカメラを通常状態に戻す
+        RestoreGKCamera();
 
         // 次のプレイヤーに交代
         currentPlayer = 1 - currentPlayer;
@@ -171,6 +318,9 @@ public class SceneTransition : MonoBehaviour
 
         // スコア表示を更新
         ScoreManager.Instance.RefreshDisplay();
+
+        // カメラ表示先を交代
+        ApplyCameraDisplays();
 
         // ボールを初期位置に戻す
         BallShooter shooter =
