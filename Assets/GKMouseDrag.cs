@@ -519,8 +519,8 @@ public class GKMouseBoneDrag : MonoBehaviour
         }
 
         Vector3 anchor =
-            moveGizmoHandle.transform.position
-            - targetCamera.transform.forward * 0.5f;
+    playerRoot.position
+    - targetCamera.transform.forward * 0.5f;
 
         foreach (MoveArrow arrow in moveArrows)
         {
