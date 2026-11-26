@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class GKHeadFly : MonoBehaviour
@@ -33,6 +32,12 @@ public class GKHeadFly : MonoBehaviour
             return;
         }
 
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbodyが設定されていません！");
+            return;
+        }
+
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
@@ -45,12 +50,14 @@ public class GKHeadFly : MonoBehaviour
             transform.rotation;
 
         rb.isKinematic = true;
+        rb.useGravity = false;
+
         initialized = true;
     }
 
     private void LateUpdate()
     {
-        if (detached || originalHead == null)
+        if (!initialized || detached || originalHead == null)
             return;
 
         transform.position =
@@ -63,7 +70,7 @@ public class GKHeadFly : MonoBehaviour
 
     public void Fly(Vector3 hitDirection)
     {
-        if (detached || rb == null)
+        if (!initialized || detached || rb == null)
             return;
 
         detached = true;
@@ -71,13 +78,14 @@ public class GKHeadFly : MonoBehaviour
         rb.isKinematic = false;
         rb.useGravity = true;
 
+        // 飛ぶ方向を反対にする
         Vector3 force =
-            hitDirection.normalized * flyForce +
+            -hitDirection.normalized * flyForce +
             Vector3.up * upwardForce;
 
         rb.AddForce(force, ForceMode.Impulse);
 
-        Debug.Log("頭が吹っ飛びました！");
+        Debug.Log("頭が後ろ方向に吹っ飛びました！");
     }
 
     public void ResetHead()
@@ -89,6 +97,7 @@ public class GKHeadFly : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
 
         rb.isKinematic = true;
+        rb.useGravity = false;
 
         transform.position = initialPosition;
         transform.rotation = initialRotation;
