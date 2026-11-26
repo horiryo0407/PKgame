@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
@@ -83,6 +82,10 @@ public class GKMouseBoneDrag : MonoBehaviour
     private bool moveGizmoVisible;
     private Vector3 selectedMoveAxis;
     private Vector3 selectedMoveScreenAxis;
+
+    // GKの前後位置を固定するためのZ座標
+    private float moveAreaLocalZ;
+
     private bool draggingMoveArrow;
     private GKBoneHandle moveGizmoHandle;
 
@@ -156,6 +159,15 @@ public class GKMouseBoneDrag : MonoBehaviour
         {
             Debug.LogWarning(
                 "GK移動矢印：MoveSidewaysに設定されたGKBoneHandleが見つかりません。hipのHandle Typeを確認してください。");
+        }
+
+        // GKの前後位置を記録
+        // 左右・上下移動ではこの位置を維持する
+        if (moveAreaCollider != null && playerRoot != null)
+        {
+            moveAreaLocalZ =
+                moveAreaCollider.transform
+                .InverseTransformPoint(playerRoot.position).z;
         }
 
         // Inspectorの設定に合わせて操作状態を反映
@@ -507,8 +519,8 @@ public class GKMouseBoneDrag : MonoBehaviour
         }
 
         Vector3 anchor =
-            moveGizmoHandle.transform.position
-            - targetCamera.transform.forward * 0.5f;
+    playerRoot.position
+    - targetCamera.transform.forward * 0.5f;
 
         foreach (MoveArrow arrow in moveArrows)
         {
@@ -577,7 +589,7 @@ public class GKMouseBoneDrag : MonoBehaviour
         rings.Clear();
 
         GKBoneHandle[] handles =
-     GetComponentsInChildren<GKBoneHandle>(true);
+            GetComponentsInChildren<GKBoneHandle>(true);
 
         foreach (GKBoneHandle handle in handles)
         {
@@ -757,10 +769,15 @@ public class GKMouseBoneDrag : MonoBehaviour
                 selectedMoveScreenAxis =
                     nearestArrow.screenAxis;
 
+                // 移動方向をGKMoveAreaの左右・上下方向に固定する
+                Transform areaTransform = moveAreaCollider != null
+                    ? moveAreaCollider.transform
+                    : transform;
+
                 selectedMoveAxis =
                     nearestArrow.screenAxis == Vector3.right
-                    ? targetCamera.transform.right
-                    : targetCamera.transform.up;
+                    ? areaTransform.right
+                    : areaTransform.up;
 
                 draggingMoveArrow = true;
                 previousMousePosition = mousePosition;
@@ -1169,8 +1186,15 @@ public class GKMouseBoneDrag : MonoBehaviour
             Vector2.Dot(mouseDelta, screenAxis)
             * moveSensitivity;
 
-        // カメラ正面から見た左右・上下だけ移動
-        playerRoot.position += selectedMoveAxis * amount;
+        // 左右は反転した状態を維持し、上下だけ操作方向を反転する
+        Vector3 moveDirection = selectedMoveAxis;
+
+        if (selectedMoveScreenAxis == Vector3.up)
+        {
+            moveDirection = -moveDirection;
+        }
+
+        playerRoot.position -= moveDirection * amount;
 
         // Box Colliderの内側にGKの基準位置を収める
         if (moveAreaCollider != null)
@@ -1197,7 +1221,9 @@ public class GKMouseBoneDrag : MonoBehaviour
                 center.y + halfSize.y
             );
 
-            // Z（前後）は変更せず、元の位置を維持
+            // Z（前後）は起動時の位置に固定する
+            localPosition.z = moveAreaLocalZ;
+
             playerRoot.position =
                 areaTransform.TransformPoint(localPosition);
         }
@@ -1207,12 +1233,9 @@ public class GKMouseBoneDrag : MonoBehaviour
         UpdateMoveArrowPositions();
     }
 
-
-
     // ------------------------------
     // GK操作のON/OFF切り替え
     // ------------------------------
-
 
     public void SetEditing(bool enabled)
     {
@@ -1263,5 +1286,4 @@ public class GKMouseBoneDrag : MonoBehaviour
 
         Debug.Log("GK操作：" + (enabled ? "ON" : "OFF"));
     }
-
 }
