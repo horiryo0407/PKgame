@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -8,16 +9,14 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance;
 
     [Header("スコア表示")]
-    [SerializeField] private TMP_Text scoreText;
+    private readonly List<TMP_Text> player1ScoreTexts = new List<TMP_Text>();
+    private readonly List<TMP_Text> player2ScoreTexts = new List<TMP_Text>();
 
     [Header("ターン表示")]
-    [SerializeField] private TMP_Text turnText;
+    private readonly List<TMP_Text> turnTexts = new List<TMP_Text>();
 
     [Header("勝敗結果表示")]
-    [SerializeField] private TMP_Text resultText;
-
-    [Header("文字サイズ")]
-    [SerializeField] private float fontSize = 18f;
+    private readonly List<TMP_Text> resultTexts = new List<TMP_Text>();
 
     private int player1Score = 0;
     private int player2Score = 0;
@@ -77,27 +76,32 @@ public class ScoreManager : MonoBehaviour
 
     private void FindTextObjects()
     {
-        GameObject scoreObject = GameObject.Find("ScoreText");
-        GameObject turnObject = GameObject.Find("TurnText");
-        GameObject resultObject = GameObject.Find("ResultText");
+        player1ScoreTexts.Clear();
+        player2ScoreTexts.Clear();
+        turnTexts.Clear();
+        resultTexts.Clear();
 
-        scoreText = scoreObject != null
-            ? scoreObject.GetComponent<TMP_Text>()
-            : null;
+        // 名前の先頭が同じテキストを、すべて集める（両モニターぶん）
+        TMP_Text[] allTexts =
+            FindObjectsByType<TMP_Text>(FindObjectsSortMode.None);
 
-        turnText = turnObject != null
-            ? turnObject.GetComponent<TMP_Text>()
-            : null;
-
-        resultText = resultObject != null
-            ? resultObject.GetComponent<TMP_Text>()
-            : null;
+        foreach (TMP_Text t in allTexts)
+        {
+            if (t.name.StartsWith("Player1ScoreText"))
+                player1ScoreTexts.Add(t);
+            else if (t.name.StartsWith("Player2ScoreText"))
+                player2ScoreTexts.Add(t);
+            else if (t.name.StartsWith("TurnText"))
+                turnTexts.Add(t);
+            else if (t.name.StartsWith("ResultText"))
+                resultTexts.Add(t);
+        }
 
         // 試合終了までは非表示
-        if (resultText != null)
+        foreach (TMP_Text r in resultTexts)
         {
-            resultText.text = "";
-            resultText.enabled = false;
+            r.text = "";
+            r.enabled = false;
         }
     }
 
@@ -175,32 +179,38 @@ public class ScoreManager : MonoBehaviour
     // 最終結果表示
     private void ShowFinalResult()
     {
-        if (resultText == null)
+        if (resultTexts.Count == 0)
         {
             Debug.LogWarning("ResultTextが見つかりません。");
             return;
         }
 
-        // 結果を表示
-        resultText.enabled = true;
+        string message;
 
         if (winner == 0)
         {
-            resultText.text = "プレイヤー1の勝利！";
+            message = "プレイヤー1の勝利！";
         }
         else if (winner == 1)
         {
-            resultText.text = "プレイヤー2の勝利！";
+            message = "プレイヤー2の勝利！";
         }
         else
         {
-            resultText.text = "引き分け！";
+            message = "引き分け！";
         }
 
-        resultText.text +=
+        message +=
             "\n\n最終スコア\n" +
             "プレイヤー1：" + player1Score + "点\n" +
             "プレイヤー2：" + player2Score + "点";
+
+        // 結果を表示
+        foreach (TMP_Text r in resultTexts)
+        {
+            r.enabled = true;
+            r.text = message;
+        }
     }
 
     // 勝者を取得
@@ -225,10 +235,10 @@ public class ScoreManager : MonoBehaviour
 
         SceneTransition.ResetTurn();
 
-        if (resultText != null)
+        foreach (TMP_Text r in resultTexts)
         {
-            resultText.text = "";
-            resultText.enabled = false;
+            r.text = "";
+            r.enabled = false;
         }
 
         UpdateScoreText();
@@ -242,32 +252,20 @@ public class ScoreManager : MonoBehaviour
     // 表示更新
     private void UpdateScoreText()
     {
-        if (scoreText != null)
+        foreach (TMP_Text t in player1ScoreTexts)
         {
-            scoreText.fontSize = fontSize;
-
-            scoreText.text =
-                "プレイヤー1：" + player1Score +
-                "点 (" + player1Shots + "/5)\n" +
-                "プレイヤー2：" + player2Score +
-                "点 (" + player2Shots + "/5)";
+            t.text = "1P   " + player1Score;
         }
 
-        if (turnText != null)
+        foreach (TMP_Text t in player2ScoreTexts)
         {
-            turnText.fontSize = fontSize;
+            t.text = player2Score + "   2P";
+        }
 
-            if (IsGameFinished)
-            {
-                turnText.text = "試合終了！";
-            }
-            else
-            {
-                turnText.text =
-                    "第 " + (totalShots + 1) +
-                    " 投 / 10　プレイヤー" +
-                    (SceneTransition.CurrentPlayer + 1);
-            }
+        foreach (TMP_Text t in turnTexts)
+        {
+            t.text =
+                Mathf.Min(totalShots / 2 + 1, MaxShots / 2).ToString();
         }
     }
 }
