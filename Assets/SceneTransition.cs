@@ -18,7 +18,7 @@ public class SceneTransition : MonoBehaviour
     [SerializeField] private Canvas gkSideCanvas;
 
     [Header("シュート後の待ち時間")]
-    [SerializeField] private float transitionDelay = 5f;
+    [SerializeField] private float transitionDelay = 2f;
 
     [Header("ボールリセット後の待機時間")]
     [SerializeField] private float timerStartDelay = 0.5f;

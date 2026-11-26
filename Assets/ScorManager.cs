@@ -26,7 +26,7 @@ public class ScoreManager : MonoBehaviour
 
     private int totalShots = 0;
 
-    private const int MaxShots = 10;
+    private const int MaxShots = 6;
 
     public int TotalShots => totalShots;
     public bool IsGameFinished => totalShots >= MaxShots;
