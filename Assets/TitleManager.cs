@@ -12,6 +12,16 @@ public class TitleManager : MonoBehaviour
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
+
+        // 2画面目を有効にする
+        if (Display.displays.Length > 1)
+        {
+            Display.displays[1].Activate();
+        }
+        else
+        {
+            Debug.LogWarning("2画面目が接続されていません。");
+        }
     }
 
     public void StartGame()
