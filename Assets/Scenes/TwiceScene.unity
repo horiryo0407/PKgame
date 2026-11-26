@@ -231,7 +231,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GKPoseOnSpace
   hip: {fileID: 1028357327}
-  rShldrBend: {fileID: 1900504791}
+  rShldrBend: {fileID: 1094965372}
   lShldrBend: {fileID: 70610847}
   rForearmBend: {fileID: 387171858}
   lForearmBend: {fileID: 561044412}
