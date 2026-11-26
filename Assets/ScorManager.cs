@@ -35,6 +35,9 @@ public class ScoreManager : MonoBehaviour
     private int winner = -2;
     public int Winner => winner;
 
+    public int Player1Score => player1Score;
+    public int Player2Score => player2Score;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

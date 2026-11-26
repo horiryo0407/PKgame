@@ -1,6 +1,7 @@
 
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SceneTransition : MonoBehaviour
 {
@@ -21,6 +22,9 @@ public class SceneTransition : MonoBehaviour
 
     [Header("ボールリセット後の待機時間")]
     [SerializeField] private float timerStartDelay = 0.5f;
+
+    [Header("結果シーンへ移るまでの待ち時間")]
+    [SerializeField] private float resultSceneDelay = 5f;
 
     // 0 = プレイヤー1
     // 1 = プレイヤー2
@@ -316,8 +320,12 @@ public class SceneTransition : MonoBehaviour
         {
             Debug.Log("10投終了！試合終了です！");
 
-            // 最終結果を両画面に残す
-            // GKカメラの同期と描画設定は維持する
+            // 最終結果を少し見せてから、結果シーンへ
+            yield return new WaitForSecondsRealtime(
+                resultSceneDelay
+            );
+
+            SceneManager.LoadScene("ResultScene");
 
             isTransitioning = false;
             yield break;
