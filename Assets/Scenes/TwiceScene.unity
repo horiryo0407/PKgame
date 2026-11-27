@@ -12398,6 +12398,8 @@ MonoBehaviour:
   gkSideCanvas: {fileID: 1006468204}
   transitionDelay: 10
   timerStartDelay: 0.5
+  resultSceneDelay: 5
+  cursorLock: {fileID: 2098145844}
 --- !u!4 &1656497319
 Transform:
   m_ObjectHideFlags: 0
@@ -23566,6 +23568,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 900518471}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2098145843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2098145845}
+  - component: {fileID: 2098145844}
+  m_Layer: 0
+  m_Name: KeeperCursorLock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2098145844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098145843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bffa3035a927d644977e01c424b5456, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeeperCursorLock
+--- !u!4 &2098145845
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098145843}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1438.212, y: -0.00002, z: 12519.365}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2104731323
 GameObject:
   m_ObjectHideFlags: 0
@@ -23929,3 +23975,4 @@ SceneRoots:
   - {fileID: 1496117687}
   - {fileID: 1661288470}
   - {fileID: 1169024033}
+  - {fileID: 2098145845}
