@@ -26,6 +26,9 @@ public class SceneTransition : MonoBehaviour
     [Header("結果シーンへ移るまでの待ち時間")]
     [SerializeField] private float resultSceneDelay = 5f;
 
+    [Header("カーソルの制限")]
+    [SerializeField] private KeeperCursorLock cursorLock;
+
     // 0 = プレイヤー1
     // 1 = プレイヤー2
     private static int currentPlayer = 0;
@@ -132,6 +135,10 @@ public class SceneTransition : MonoBehaviour
             gkSideCanvas.targetDisplay = gkCamera.targetDisplay;
         }
 
+        if (cursorLock != null)
+        {
+            cursorLock.Lock(gkCamera.targetDisplay);
+        }
 
         Debug.Log(
             "KKカメラ Display " +
